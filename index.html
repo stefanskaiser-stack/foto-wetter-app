@@ -206,8 +206,8 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'foto_pro_v27_favs';
-    const LAST_LOC_KEY = 'foto_pro_v27_last';
+    const STORAGE_KEY = 'foto_pro_v28_favs';
+    const LAST_LOC_KEY = 'foto_pro_v28_last';
     const ICONS = {
         sunrise: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 17V3m0 0l-4 4m4-4l4 4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
         sunset: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3v14m0 0l-4-4m4 4l4-4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
@@ -219,7 +219,6 @@
     let currentLoc = null;
     let weekData = [];
 
-    // --- API Helper ---
     async function fetchWithRetry(url, options = {}, retries = 5, backoff = 1000) {
         try {
             const res = await fetch(url, options);
@@ -249,7 +248,6 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
-    // --- Analyse Engine ---
     function analyzeEvent(type, timeStr, hourly) {
         if (!timeStr || !hourly || !hourly.time) return null;
         const target = new Date(timeStr).getTime();
@@ -290,20 +288,22 @@
         let interval = (m.wind < 8) ? "10-15s" : (m.wind < 18 ? "5-8s" : (m.wind < 30 ? "3s" : "2s"));
         const fogRisk = (m.hum > 92 && (m.temp - m.dew) < 1.2 && m.wind < 8) ? "Hoch" : "Gering";
         const ndFilter = m.cTot > 15 && m.wind > 12 ? "ND 64 / 1000 empfohlen" : "Nicht nötig";
-        const score = Math.round((lS * 0.45) + (dS * 0.35) + (tlS * 0.2) - (rS * 0.25));
+        
+        // --- SCORE CLAMPING (0-100) ---
+        lS = Math.max(0, Math.min(100, Math.round(lS)));
+        dS = Math.max(0, Math.min(100, Math.round(dS)));
+        rS = Math.max(0, Math.min(100, Math.round(rS)));
 
-        return { score: Math.max(0, Math.min(100, score)), sub: { light: lS, drama: dS, risk: rS }, samples, fogRisk, interval, ndFilter, time: timeStr.split('T')[1] };
+        const finalScore = Math.max(0, Math.min(100, Math.round((lS * 0.45) + (dS * 0.35) + (tlS * 0.2) - (rS * 0.25))));
+
+        return { score: finalScore, sub: { light: lS, drama: dS, risk: rS }, samples, fogRisk, interval, ndFilter, time: timeStr.split('T')[1] };
     }
 
     async function fetchWeather(latRaw, lonRaw, name) {
-        // --- KOORDINATEN-HARMONISIERUNG ---
-        // Rundung auf 2 Stellen (~1.1km) sorgt für Konsistenz zwischen Suche und GPS
         const lat = parseFloat(Number(latRaw).toFixed(2));
         const lon = parseFloat(Number(lonRaw).toFixed(2));
-
         const status = document.getElementById('status');
         status.innerHTML = `Analysiere <span style="color:var(--accent); font-weight:700;">${name}</span><br><small style="opacity:0.6">Gitterpunkt: ${lat} / ${lon}</small> <span class="loading-dots"></span>`;
-        
         currentLoc = { lat, lon, name };
         localStorage.setItem(LAST_LOC_KEY, JSON.stringify(currentLoc));
         updateFavBtn();
@@ -358,15 +358,12 @@
         const btn = document.getElementById('gpsBtn');
         btn.disabled = true;
         document.getElementById('status').innerHTML = `<span class="loading-dots">Ermittle präzise GPS-Koordinaten</span>`;
-        
         navigator.geolocation.getCurrentPosition(
             async p => {
                 const lat = p.coords.latitude;
                 const lon = p.coords.longitude;
                 let name = "Aktueller Standort";
-                
                 document.getElementById('status').innerHTML = `<span class="loading-dots">Koordinaten erhalten, bestimme Ortsnamen</span>`;
-                
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`);
                     const data = await res.json();
@@ -374,7 +371,6 @@
                         name = data.address.city || data.address.town || data.address.village || data.address.suburb || name;
                     }
                 } catch(e) {}
-                
                 fetchWeather(lat, lon, name);
                 btn.disabled = false;
             },
@@ -453,9 +449,9 @@
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">
                     <span style="font-weight:700;">${icon} ${label}</span><span style="opacity:0.8; font-size:0.75rem;">${timeLabel}: <strong>${ev.time} Uhr</strong></span>
                 </div>
-                <div class="dim-row"><div class="dim-label"><span>Licht / Farbe</span><span>${ev.sub.light}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.light}%; background:var(--excellent)"></div></div></div>
-                <div class="dim-row"><div class="dim-label"><span>Wetter-Drama</span><span>${ev.sub.drama}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.drama}%; background:var(--good)"></div></div></div>
-                <div class="dim-row"><div class="dim-label"><span>Risiko</span><span>${Math.round(ev.sub.risk)}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.risk}%; background:var(--doubtful)"></div></div></div>
+                <div class="dim-row"><div class="dim-label"><span>Licht / Farbe</span><span>${ev.sub.light}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.light)}%; background:var(--excellent)"></div></div></div>
+                <div class="dim-row"><div class="dim-label"><span>Wetter-Drama</span><span>${ev.sub.drama}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.drama)}%; background:var(--good)"></div></div></div>
+                <div class="dim-row"><div class="dim-label"><span>Risiko</span><span>${Math.round(ev.sub.risk)}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.risk)}%; background:var(--doubtful)"></div></div></div>
                 <div class="pro-insight-grid">
                     <div class="insight-box"><div class="insight-label">Nebel-Potential</div><div class="insight-val" style="color:${ev.fogRisk === 'Hoch' ? 'var(--excellent)' : ''}">${ev.fogRisk}</div></div>
                     <div class="insight-box"><div class="insight-label">Timelapse-Int.</div><div class="insight-val">${ev.interval}</div></div>
