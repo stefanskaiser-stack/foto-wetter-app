@@ -156,9 +156,9 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'foto_pro_app_favorites_v2';
-    const LAST_LOC_KEY = 'foto_pro_app_last_loc_v2';
-    const API_KEY_STORAGE = 'foto_pro_gemini_api_key_v2';
+    const STORAGE_KEY = 'foto_pro_app_favorites_v3';
+    const LAST_LOC_KEY = 'foto_pro_app_last_loc_v3';
+    const API_KEY_STORAGE = 'foto_pro_gemini_api_key_v3';
     const apiKey = ""; 
     
     const ICONS = {
@@ -213,7 +213,7 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
-    // --- ✨ Gemini KI Integration (JSON Struktur + Quota Handling) ---
+    // --- ✨ Gemini KI Integration (JSON + Stabilisiert) ---
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
@@ -239,12 +239,12 @@
         const dateString = day.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
 
         const isCanvas = window.location.hostname.includes('usercontent.goog');
-        const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
+        // gemini-1.5-flash als stabilere Alternative (weniger demand-spikes)
+        const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-1.5-flash";
         
-        // Zwingt die KI auf API-Ebene, ein valides JSON-Datenobjekt ohne Textabbrüche zu generieren
         const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine evidenzbasierte Analyse.
-Schreibe flüssige Sätze (max. 3 pro Feld). Keine Kameramodelle nennen.
-Antworte ZWINGEND als JSON-Objekt mit exakt diesen Schlüsseln: "sky", "single", "timelapse".`;
+Fasse dich kurz (max. 3 flüssige Sätze pro Feld). Nenne keine Kameramodelle.
+Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "single", "timelapse".`;
         
         const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}.
         Wetter: Temp ${main.temp}°C, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
@@ -264,7 +264,7 @@ Antworte ZWINGEND als JSON-Objekt mit exakt diesen Schlüsseln: "sky", "single",
                     systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: { 
                         temperature: 0.4, 
-                        responseMimeType: "application/json" // Harte Vorgabe für strukturiertes Format
+                        responseMimeType: "application/json" 
                     }
                 })
             });
@@ -289,12 +289,12 @@ Antworte ZWINGEND als JSON-Objekt mit exakt diesen Schlüsseln: "sky", "single",
             container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE</div><div>${formattedText}</div>`;
         } catch (e) {
             let errorMsg = e.message;
-            // Klares Error-Handling für das Rate Limit (15 Anfragen/Min)
             if (errorMsg.toLowerCase().includes("quota") || errorMsg.includes("429")) {
-                errorMsg = "API-Limit erreicht (Free Tier: max. 15 Anfragen/Minute). Bitte warte ca. 60 Sekunden.";
+                errorMsg = "API-Limit erreicht (Free Tier: max. 15 Anfragen/Min). Bitte warte ca. 60 Sek.";
+            } else if (errorMsg.toLowerCase().includes("demand") || errorMsg.includes("503")) {
+                errorMsg = "Modell-Überlastung bei Google. Bitte versuche es in Kürze erneut.";
             }
             container.innerHTML = `<div class="ai-header" style="color: var(--doubtful);">System-Meldung</div><div style="font-size: 0.85rem;">${errorMsg}</div>`;
-            console.error(e);
         } finally { 
             btn.disabled = false; 
         }
