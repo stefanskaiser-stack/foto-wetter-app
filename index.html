@@ -134,7 +134,7 @@
         </div>
 
         <div id="keySetup" class="key-setup-banner">
-            <p style="margin:0 0 8px 0;"><strong>KI-Funktion freischalten:</strong> Privater Gemini API Key erforderlich. Speicherung erfolgt rein lokal.</p>
+            <p style="margin:0 0 8px 0;"><strong>KI-Funktion freischalten:</strong> Privater Gemini API Key erforderlich. Speicherung erfolgt rein lokal im Browser.</p>
             <div style="display:flex; gap:8px;">
                 <input type="password" id="apiKeyInput" placeholder="Schlüssel hier einfügen...">
                 <button class="btn-primary" onclick="saveApiKey()" style="padding:8px 14px;">Aktivieren</button>
@@ -213,6 +213,7 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
+    // --- ✨ Gemini KI Integration (JSON Struktur + Quota Handling) ---
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
@@ -240,10 +241,10 @@
         const isCanvas = window.location.hostname.includes('usercontent.goog');
         const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
         
-        // JSON-Architektur: Zwingt die KI auf API-Ebene, ein valides Datenobjekt ohne Abbrüche zu generieren
+        // Zwingt die KI auf API-Ebene, ein valides JSON-Datenobjekt ohne Textabbrüche zu generieren
         const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine evidenzbasierte Analyse.
-Schreibe vollständige, flüssige Sätze (max. 3 pro Feld). Nenne keine Kameramodelle.
-Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "single", "timelapse".`;
+Schreibe flüssige Sätze (max. 3 pro Feld). Keine Kameramodelle nennen.
+Antworte ZWINGEND als JSON-Objekt mit exakt diesen Schlüsseln: "sky", "single", "timelapse".`;
         
         const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}.
         Wetter: Temp ${main.temp}°C, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
@@ -263,7 +264,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                     systemInstruction: { parts: [{ text: systemPrompt }] },
                     generationConfig: { 
                         temperature: 0.4, 
-                        responseMimeType: "application/json" // Harte Vorgabe für die API
+                        responseMimeType: "application/json" // Harte Vorgabe für strukturiertes Format
                     }
                 })
             });
@@ -274,7 +275,6 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
             const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             if (!rawText) throw new Error("Leere Antwort vom Modell.");
 
-            // JSON parsen und HTML dynamisch zusammenbauen
             const aiData = JSON.parse(rawText);
             
             const formattedText = `
@@ -288,7 +288,12 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
 
             container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE</div><div>${formattedText}</div>`;
         } catch (e) {
-            container.innerHTML = `<div class="ai-header">Fehler</div>Analyse fehlgeschlagen: ${e.message}`;
+            let errorMsg = e.message;
+            // Klares Error-Handling für das Rate Limit (15 Anfragen/Min)
+            if (errorMsg.toLowerCase().includes("quota") || errorMsg.includes("429")) {
+                errorMsg = "API-Limit erreicht (Free Tier: max. 15 Anfragen/Minute). Bitte warte ca. 60 Sekunden.";
+            }
+            container.innerHTML = `<div class="ai-header" style="color: var(--doubtful);">System-Meldung</div><div style="font-size: 0.85rem;">${errorMsg}</div>`;
             console.error(e);
         } finally { 
             btn.disabled = false; 
