@@ -213,7 +213,7 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
-    // --- ✨ Gemini KI Integration (JSON + Stabilisiert) ---
+    // --- ✨ Gemini KI Integration (JSON + Current Gen Model) ---
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
@@ -239,8 +239,8 @@
         const dateString = day.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
 
         const isCanvas = window.location.hostname.includes('usercontent.goog');
-        // gemini-1.5-flash als stabilere Alternative (weniger demand-spikes)
-        const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-1.5-flash";
+        // FIX: Zurück zum aktuellen Modell (gemini-2.5-flash). Das 1.5 Modell war für neue Billing-Keys teilweise nicht gemappt.
+        const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
         
         const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine evidenzbasierte Analyse.
 Fasse dich kurz (max. 3 flüssige Sätze pro Feld). Nenne keine Kameramodelle.
@@ -290,9 +290,11 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
         } catch (e) {
             let errorMsg = e.message;
             if (errorMsg.toLowerCase().includes("quota") || errorMsg.includes("429")) {
-                errorMsg = "API-Limit erreicht (Free Tier: max. 15 Anfragen/Min). Bitte warte ca. 60 Sek.";
+                errorMsg = "API-Limit erreicht. Bitte warte ca. 60 Sek.";
             } else if (errorMsg.toLowerCase().includes("demand") || errorMsg.includes("503")) {
-                errorMsg = "Modell-Überlastung bei Google. Bitte versuche es in Kürze erneut.";
+                errorMsg = "Temporäre Google Server-Überlastung (High Demand). Bitte in ein paar Sekunden erneut versuchen.";
+            } else if (errorMsg.includes("not found")) {
+                 errorMsg = "Modell-Konfigurationsfehler. API-Key prüfen.";
             }
             container.innerHTML = `<div class="ai-header" style="color: var(--doubtful);">System-Meldung</div><div style="font-size: 0.85rem;">${errorMsg}</div>`;
         } finally { 
