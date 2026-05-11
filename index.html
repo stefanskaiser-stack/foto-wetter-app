@@ -53,21 +53,28 @@
             box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 24px; margin-top: -60px; position: relative; z-index: 10; 
         }
         .search-group { display: flex; gap: 8px; margin-bottom: 12px; }
-        input[type="text"] { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-color); color: var(--text-main); outline: none; font-size: 1rem; -webkit-appearance: none; }
+        input[type="text"], input[type="password"] { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-color); color: var(--text-main); outline: none; font-size: 1rem; -webkit-appearance: none; }
         
         button { padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); }
-        .btn-gps { background: #5856d6; color: white; }
         .btn-ai { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: white; box-shadow: var(--ai-glow); }
+
+        /* Discreet Key Setup */
+        .key-setup-banner { 
+            background: rgba(168, 85, 247, 0.1); 
+            padding: 12px; border-radius: 10px; margin-bottom: 15px; 
+            font-size: 0.8rem; display: none; border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+        .key-setup-banner.active { display: block; }
+        .config-link { color: var(--text-muted); font-size: 0.7rem; cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
 
         .fav-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
         .fav-chip { background: var(--bg-color); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid var(--border); }
         
         #searchResults { list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 10px; max-height: 250px; overflow-y: auto; background: var(--card-bg); position: absolute; left: 20px; right: 20px; top: 70px; z-index: 100; box-shadow: var(--shadow); }
         #searchResults li { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        #searchResults li:hover { background: var(--bg-color); }
 
         .day-accordion { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .day-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -123,9 +130,20 @@
         <div class="search-group">
             <input type="text" id="locInput" placeholder="Ort suchen..." onkeypress="if(event.key==='Enter') searchLocation()">
             <button class="btn-primary" onclick="searchLocation()" id="searchBtn">Suchen</button>
-            <button class="btn-gps" onclick="useGPS()" id="gpsBtn"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button>
-            <button class="btn-secondary hidden" id="saveFavBtn" onclick="toggleFavorite()"><svg class="icon-svg" style="color:#eb4d4b;" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+            <button class="btn-secondary hidden" id="saveFavBtn" onclick="toggleFavorite()"><svg class="icon-svg" style="color:#eb4d4b;" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Speichern</button>
         </div>
+
+        <div id="keySetup" class="key-setup-banner">
+            <p style="margin:0 0 8px 0;"><strong>KI-Funktion freischalten:</strong> Du benötigst einen privaten Gemini API Key. Dieser wird nur lokal in deinem Browser gespeichert.</p>
+            <div style="display:flex; gap:8px;">
+                <input type="password" id="apiKeyInput" placeholder="Schlüssel hier einfügen...">
+                <button class="btn-primary" onclick="saveApiKey()" style="padding:8px 14px;">Aktivieren</button>
+            </div>
+            <p style="font-size:0.65rem; margin:6px 0 0 0; opacity:0.7;">Kostenlos erhältlich unter: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:inherit;">aistudio.google.com</a></p>
+        </div>
+        
+        <span class="config-link" onclick="document.getElementById('keySetup').classList.toggle('active')">KI-Schnittstelle konfigurieren</span>
+
         <ul id="searchResults" class="hidden"></ul>
         <div id="favoritesContainer" class="fav-list hidden"></div>
     </div>
@@ -138,9 +156,12 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'foto_pro_v43_favs';
-    const LAST_LOC_KEY = 'foto_pro_v43_last';
-    const apiKey = ""; // Gemini API Key
+    // Stabile Storage-Keys ohne Versionsnummer für persistente Speicherung über Updates hinweg
+    const STORAGE_KEY = 'foto_pro_app_favorites';
+    const LAST_LOC_KEY = 'foto_pro_app_last_location';
+    const API_KEY_STORAGE = 'foto_pro_gemini_api_key';
+    const apiKey = ""; 
+    
     const ICONS = {
         sunrise: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 17V3m0 0l-4 4m4-4l4 4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
         sunset: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3v14m0 0l-4-4m4 4l4-4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
@@ -152,6 +173,23 @@
 
     let currentLoc = null;
     let weekData = [];
+
+    // --- Key Management ---
+    function saveApiKey() {
+        const val = document.getElementById('apiKeyInput').value.trim();
+        if (val) {
+            localStorage.setItem(API_KEY_STORAGE, val);
+            document.getElementById('keySetup').classList.remove('active');
+            const status = document.getElementById('status');
+            const old = status.innerText;
+            status.innerText = "✓ KI-Schnittstelle aktiv.";
+            setTimeout(() => status.innerText = old, 2000);
+        }
+    }
+
+    function getEffectiveKey() {
+        return apiKey || localStorage.getItem(API_KEY_STORAGE) || "";
+    }
 
     async function fetchWithRetry(url, options = {}, retries = 5, backoff = 1000) {
         try {
@@ -178,14 +216,23 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
-    // --- ✨ Gemini KI Integration (v43: Fehlerbehebung ReferenceError) ---
+    // --- ✨ Gemini KI Integration ---
     async function getAIStrategy(locName, dayIdx, type) {
+        const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
         const container = document.getElementById(resultId);
+        
+        if (!activeKey) {
+            container.innerHTML = `<div class="ai-header">Key fehlt</div>Bitte konfiguriere zuerst deinen privaten Gemini API Key (siehe Link unter dem Suchfeld).`;
+            container.classList.add('visible');
+            document.getElementById('keySetup').classList.add('active');
+            return;
+        }
+
         const btnId = `ai-btn-${dayIdx}-${type}`;
         const btn = document.getElementById(btnId);
         
-        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Prüfe Topografie und jahreszeitliche Lichtstimmung</span>`;
+        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Abgleich mit atmosphärischen Gitterpunkten</span>`;
         container.classList.add('visible');
         btn.disabled = true;
 
@@ -195,25 +242,23 @@
         const dateString = day.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
         
         const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine strikt evidenzbasierte Analyse.
-        VERHALTEN: Gib NUR den finalen Analysetext aus. Keine internen Regeln texten. Beende jeden Satz logisch.
+        BEWERTUNG: Beende jeden Gedanken logisch. Keine internen Regeln texten.
         FORMAT: KEIN Markdown (keine Sternchen). KEIN Kameramodell nennen.
-        KONTEXT: Berücksichtige das Datum (Jahreszeit/Sonnenstand) und den Ort (Landschaftstyp/Topografie) NUR dann, wenn sie eine relevante Auswirkung auf das Licht oder die Strategie haben. Vermeide Standardfloskeln.
-        Nutze GENAU diese Marker für Abschnitte: [SKY], [SINGLE], [TIMELAPSE].`;
+        KONTEXT: Berücksichtige Datum und Ort nur bei technischer Relevanz (Sonnenstand/Topografie).
+        Abschnitt-Marker: [SKY], [SINGLE], [TIMELAPSE].`;
         
-        // FIX: Removed invalid ${lat} reference which caused ReferenceError
         const userQuery = `Kontext: ${locName} (lat:${currentLoc.lat}, lon:${currentLoc.lon}). Datum: ${dateString}. Tour: ${type}.
-        Wetterdaten: Temperatur ${main.temp}°C, Taupunkt-Abstand ${ev.dewSpread.toFixed(1)}K. 
+        Wetterdaten: Temp ${main.temp}°C, Taupunkt-Abstand ${ev.dewSpread.toFixed(1)}K. 
         Wolkenverteilung: Tief ${main.cLow}%, Mittel ${main.cMid}%, Hoch ${main.cHigh}%.
-        Windbedingungen: Grundwind ${main.wind} km/h, Böen ${main.gust} km/h.
-        Blitzrisiko: ${main.lightning}%. Mond: ${day.moon.phase}.
+        Wind: Boden ${main.wind} km/h, Böen ${main.gust} km/h. Mond: ${day.moon.phase}.
         
         Analysiere präzise:
-        [SKY] Bewertung des ästhetischen Potentials (Lichtbrechung, Horizont, Fronten). Erwähne Jahreszeit/Landschaft nur bei technischer Relevanz.
+        [SKY] Bewertung des ästhetischen Potentials.
         [SINGLE] Empfehlung für Einzelaufnahme.
-        [TIMELAPSE] Empfehlung für Zeitraffer.`;
+        [TIMELAPSE] Empfehlung für Zeitraffer (Dynamik/Flüssigkeit).`;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -229,6 +274,8 @@
             });
 
             const result = await response.json();
+            if (result.error) throw new Error(result.error.message);
+
             let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Analyse momentan nicht verfügbar.";
             text = text.replace(/\*/g, '').replace(/Rule \d+:.*/gi, '').trim();
             
@@ -239,7 +286,7 @@
 
             container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE</div><div style="white-space: pre-wrap;">${formattedText}</div>`;
         } catch (e) {
-            container.innerHTML = `<div class="ai-header">Fehler</div>Analyse konnte nicht abgeschlossen werden.`;
+            container.innerHTML = `<div class="ai-header">Fehler</div>Analyse konnte nicht abgeschlossen werden: ${e.message}`;
         } finally { btn.disabled = false; }
     }
 
@@ -285,10 +332,8 @@
         const dewSpread = m.temp - m.dew;
         if (m.hum > 88 && dewSpread < 1.5) riskNotes.push("Linsenbeschlag");
         
-        let interval = (m.wind < 6) ? "6-8s" : (m.wind < 15 ? "4-5s" : "2-3s");
-
         const finalScore = Math.max(0, Math.min(100, Math.round((lS * 0.45) + (35 * 0.35) + (50 * 0.2) - (rS * 0.3))));
-        return { score: finalScore, sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, samples, interval, time: timeStr.split('T')[1], riskNotes, dewSpread };
+        return { score: finalScore, sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, samples, time: timeStr.split('T')[1], riskNotes, dewSpread };
     }
 
     async function fetchWeather(latRaw, lonRaw, name) {
@@ -338,26 +383,6 @@
         list.classList.add('hidden'); 
         fetchWeather(lat, lon, name); 
     };
-
-    async function useGPS() {
-        const btn = document.getElementById('gpsBtn'); btn.disabled = true;
-        document.getElementById('status').innerHTML = `<span class="loading-dots">Bestimme Standort</span>`;
-        navigator.geolocation.getCurrentPosition(
-            async p => {
-                const { latitude: lat, longitude: lon } = p.coords;
-                let name = "GPS Standort";
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`);
-                    const data = await res.json();
-                    name = data.address.city || data.address.town || data.address.village || name;
-                } catch(e) {}
-                fetchWeather(lat, lon, name);
-                btn.disabled = false;
-            },
-            e => { showErr("GPS Zugriff verweigert."); btn.disabled = false; },
-            { enableHighAccuracy: true }
-        );
-    }
 
     function renderForecast(name) {
         const container = document.getElementById('forecast');
@@ -455,9 +480,7 @@
 LICHT-SCORE: ${ev.score}% | SICHERHEIT: ${100-ev.sub.risk}%
 WETTER: ${main.temp.toFixed(1)}°C | Feuchte: ${main.hum}% | Taup-Abst: ${ev.dewSpread.toFixed(1)}K
 WOLKEN: Ges: ${main.cTot}% | Tief: ${main.cLow}% | Mittel: ${main.cMid}% | Hoch: ${main.cHigh}%
-WIND: ${main.wind.toFixed(1)} km/h | Böen: ${main.gust.toFixed(1)} km/h
---------------------------------------------------
-INTERVALL-EMPFEHLUNG: ${ev.interval}`;
+WIND: ${main.wind.toFixed(1)} km/h | Böen: ${main.gust.toFixed(1)} km/h`;
         const el = document.createElement('textarea'); el.value = log; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
         const s = document.getElementById('status'); const old = s.innerText; s.innerText = `✓ Log kopiert!`; setTimeout(() => s.innerText = old, 2000);
     }
@@ -465,6 +488,13 @@ INTERVALL-EMPFEHLUNG: ${ev.interval}`;
     function init() {
         const h = document.getElementById('mainHeroImg');
         if(h) h.onerror = () => { h.src = 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=1200&q=80'; };
+        
+        // Key aus LocalStorage laden
+        const storedKey = localStorage.getItem(API_KEY_STORAGE);
+        if (storedKey) {
+            document.getElementById('apiKeyInput').value = storedKey;
+        }
+
         renderFavorites();
         const last = JSON.parse(localStorage.getItem(LAST_LOC_KEY));
         if (last) fetchWeather(last.lat, last.lon, last.name);
