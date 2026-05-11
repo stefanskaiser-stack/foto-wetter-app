@@ -19,6 +19,7 @@
             --poor: #8e8e93;      
             --shadow: 0 8px 24px rgba(0,0,0,0.1);
             --radius: 14px;
+            --ai-glow: 0 0 15px rgba(168, 85, 247, 0.4);
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -37,22 +38,10 @@
             height: 180px; 
             background: #1c1c1e linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%);
             position: relative; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            text-align: center; 
-            color: white; 
-            border-bottom: 1px solid var(--border); 
-            overflow: hidden; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            text-align: center; color: white; border-bottom: 1px solid var(--border); overflow: hidden; 
         }
-        .hero-img { 
-            position: absolute; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            object-fit: cover; 
-            opacity: 0.7; 
-            z-index: 0;
-        }
+        .hero-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.7; z-index: 0; }
         .hero-content { position: relative; z-index: 1; padding: 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
         .hero h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
         .hero p { opacity: 0.9; font-size: 0.9rem; margin-top: 4px; font-weight: 500; }
@@ -60,113 +49,61 @@
         .container { max-width: 950px; margin: 0 auto 40px; padding: 24px 12px; width: 100%; }
         
         .control-card { 
-            background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: var(--radius); 
-            box-shadow: var(--shadow); 
-            border: 1px solid var(--border); 
-            margin-bottom: 24px; 
-            margin-top: -60px; 
-            position: relative; 
-            z-index: 10; 
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius); 
+            box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 24px; margin-top: -60px; position: relative; z-index: 10; 
         }
         .search-group { display: flex; gap: 8px; margin-bottom: 12px; }
-        input[type="text"] { 
-            flex: 1; 
-            padding: 12px 16px; 
-            border: 1px solid var(--border); 
-            border-radius: 10px; 
-            background: var(--bg-color); 
-            color: var(--text-main); 
-            outline: none; 
-            font-size: 1rem;
-            -webkit-appearance: none; 
-        }
+        input[type="text"] { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-color); color: var(--text-main); outline: none; font-size: 1rem; -webkit-appearance: none; }
         
-        button { 
-            padding: 10px 18px; 
-            border-radius: 10px; 
-            border: none; 
-            cursor: pointer; 
-            font-weight: 600; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 6px; 
-            font-size: 0.85rem; 
-            transition: all 0.2s; 
-            -webkit-tap-highlight-color: transparent; 
-        }
+        button { padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); }
         .btn-gps { background: #5856d6; color: white; }
+        .btn-ai { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: white; box-shadow: var(--ai-glow); }
 
         .fav-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
-        .fav-chip { 
-            background: var(--bg-color); 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 0.8rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            cursor: pointer; 
-            border: 1px solid var(--border);
-        }
-        .fav-chip:hover { border-color: var(--accent); }
+        .fav-chip { background: var(--bg-color); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid var(--border); }
         
-        #searchResults { 
-            list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 10px; 
-            max-height: 250px; overflow-y: auto; background: var(--card-bg); 
-            position: absolute; left: 20px; right: 20px; top: 70px; z-index: 100; box-shadow: var(--shadow); 
-        }
+        #searchResults { list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 10px; max-height: 250px; overflow-y: auto; background: var(--card-bg); position: absolute; left: 20px; right: 20px; top: 70px; z-index: 100; box-shadow: var(--shadow); }
         #searchResults li { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        #searchResults li:hover { background-color: var(--bg-color); }
-
-        .ranking-section { margin-bottom: 24px; }
-        .ranking-title { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; font-weight: 700; }
-        .ranking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-        .rank-card { 
-            background: var(--card-bg); padding: 16px; border-radius: var(--radius); 
-            border-left: 5px solid var(--accent); display: flex; justify-content: space-between; 
-            align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; 
-        }
-        .rank-info { font-size: 0.9rem; line-height: 1.4; }
-        .rank-score { font-weight: 800; font-size: 1.2rem; }
+        #searchResults li:hover { background: var(--bg-color); }
 
         .day-accordion { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .day-header { padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .day-header:hover { background: var(--bg-color); }
         .day-name { font-weight: 700; font-size: 1rem; flex: 1; }
-        .day-pills { display: flex; gap: 8px; }
         .pill { padding: 5px 12px; border-radius: 8px; font-weight: 700; color: white; font-size: 0.7rem; min-width: 95px; text-align: center; }
 
         .day-content { display: none; padding: 20px; border-top: 1px solid var(--border); background: #fafafa; }
         @media (prefers-color-scheme: dark) { .day-content { background: #151517; } }
         .day-accordion.open .day-content { display: block; }
 
-        .pro-insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 15px 0; }
-        .insight-box { background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border); }
-        .insight-label { color: var(--text-muted); font-size: 0.65rem; text-transform: uppercase; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.3px; }
-        .insight-val { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
-
         .dim-row { margin-bottom: 10px; }
         .dim-label { font-size: 0.72rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 2px; }
         .dim-bar-bg { height: 7px; background: var(--bg-color); border-radius: 4px; overflow: hidden; }
-        .dim-bar-fill { height: 100%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dim-bar-fill { height: 100%; transition: width 1s ease; }
 
-        .interpretation { font-size: 0.9rem; line-height: 1.5; padding: 14px; background: rgba(0, 122, 255, 0.06); border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent); font-style: italic; }
+        .interpretation { font-size: 0.88rem; line-height: 1.5; padding: 14px; background: rgba(0, 122, 255, 0.06); border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
         
-        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); margin-top: 10px; -webkit-overflow-scrolling: touch; }
+        .ai-result-box { 
+            background: linear-gradient(to right, rgba(168, 85, 247, 0.04), rgba(99, 102, 241, 0.04));
+            border: 1px solid rgba(168, 85, 247, 0.15);
+            border-radius: 12px; padding: 18px; margin: 15px 0; font-size: 0.88rem; display: none; 
+            animation: fadeIn 0.5s ease; line-height: 1.6; color: var(--text-main);
+        }
+        .ai-result-box.visible { display: block; }
+        .ai-header { color: #a855f7; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; }
+        .ai-section-title { font-weight: 700; margin-top: 15px; margin-bottom: 6px; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(0, 122, 255, 0.1); padding-bottom: 2px; }
+
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; white-space: nowrap; }
         th { background: var(--bg-color); text-align: left; padding: 12px 10px; font-weight: 600; color: var(--text-muted); }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
 
-        .hidden { display: none !important; }
         .status { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.95rem; min-height: 80px; }
         .icon-svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; vertical-align: middle; }
         
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .loading-dots:after { content: '.'; animation: dots 1.5s infinite; }
         @keyframes dots { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
     </style>
@@ -174,28 +111,23 @@
 <body>
 
 <div class="hero">
-    <img src="https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80" class="hero-img" id="mainHeroImg" onerror="this.style.opacity=0" alt="Wetterstimmung">
+    <img src="https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80" class="hero-img" id="mainHeroImg" alt="Wetterstimmung">
     <div class="hero-content">
         <h1>Foto-Wetter Pro</h1>
-        <p>Präzise Koordinaten-Analyse für Landschaft & Timelapse</p>
+        <p>Ausrüstungszentrierte Präzisions-Analyse</p>
     </div>
 </div>
 
 <div class="container">
     <div class="control-card">
         <div class="search-group">
-            <input type="text" id="locInput" placeholder="Ort suchen (z.B. Lofoten)..." onkeypress="if(event.key==='Enter') searchLocation()">
+            <input type="text" id="locInput" placeholder="Ort suchen..." onkeypress="if(event.key==='Enter') searchLocation()">
             <button class="btn-primary" onclick="searchLocation()" id="searchBtn">Suchen</button>
-            <button class="btn-gps" onclick="useGPS()" id="gpsBtn" title="Aktueller Standort"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button>
+            <button class="btn-gps" onclick="useGPS()" id="gpsBtn"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg></button>
             <button class="btn-secondary hidden" id="saveFavBtn" onclick="toggleFavorite()"><svg class="icon-svg" style="color:#eb4d4b;" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
         </div>
         <ul id="searchResults" class="hidden"></ul>
         <div id="favoritesContainer" class="fav-list hidden"></div>
-    </div>
-
-    <div id="rankingContainer" class="ranking-section hidden">
-        <div class="ranking-title">Top Gelegenheiten dieser Woche</div>
-        <div id="rankingGrid" class="ranking-grid"></div>
     </div>
 
     <div id="status" class="status">Bitte wählen Sie einen Standort.</div>
@@ -206,14 +138,16 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'foto_pro_v28_favs';
-    const LAST_LOC_KEY = 'foto_pro_v28_last';
+    const STORAGE_KEY = 'foto_pro_v43_favs';
+    const LAST_LOC_KEY = 'foto_pro_v43_last';
+    const apiKey = ""; // Gemini API Key
     const ICONS = {
         sunrise: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 17V3m0 0l-4 4m4-4l4 4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
         sunset: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3v14m0 0l-4-4m4 4l4-4M2 17h20M5 12a7 7 0 0 1 14 0"/></svg>`,
         moon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
-        export: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>`,
-        chevron: `<svg class="icon-svg" style="width:14px; height:14px; opacity:0.3;" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`
+        export: `<svg class="icon-svg" viewBox="0 0 24 24" style="width:14px; height:14px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>`,
+        chevron: `<svg class="icon-svg" style="width:14px; height:14px; opacity:0.3;" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`,
+        ai: `<svg class="icon-svg" viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2zM12 15.5l-4.5 2L12 4.5l4.5 13-4.5-2z"/></svg>`
     };
 
     let currentLoc = null;
@@ -222,25 +156,21 @@
     async function fetchWithRetry(url, options = {}, retries = 5, backoff = 1000) {
         try {
             const res = await fetch(url, options);
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.reason || `HTTP Error: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return await res.json();
         } catch (err) {
             if (retries <= 0) throw err;
-            await new Promise(resolve => setTimeout(resolve, backoff));
-            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+            return new Promise(r => setTimeout(() => r(fetchWithRetry(url, options, retries - 1, backoff * 2)), backoff));
         }
     }
 
-    const getFavs = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; } };
+    const getFavs = () => JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    const getBarColor = (val) => val >= 85 ? 'var(--excellent)' : (val >= 60 ? 'var(--neutral)' : 'var(--doubtful)');
     const getScoreColor = (s) => s >= 80 ? 'var(--excellent)' : (s >= 65 ? 'var(--good)' : (s >= 45 ? 'var(--neutral)' : 'var(--doubtful)'));
     const showErr = (m) => { document.getElementById('status').innerHTML = `<span style="color:var(--doubtful); font-weight:600;">${m}</span>`; };
 
     function getMoonPhase(date) {
-        const lp = 2551443; 
-        const now = date.getTime();
+        const lp = 2551443; const now = date.getTime();
         const new_moon = new Date(1970, 0, 7, 20, 35, 0).getTime();
         const phase = ((now - new_moon) % lp) / lp;
         if (phase < 0.06 || phase > 0.94) return "Neumond";
@@ -248,83 +178,142 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
+    // --- ✨ Gemini KI Integration (v43: Fehlerbehebung ReferenceError) ---
+    async function getAIStrategy(locName, dayIdx, type) {
+        const resultId = `ai-result-${dayIdx}-${type}`;
+        const container = document.getElementById(resultId);
+        const btnId = `ai-btn-${dayIdx}-${type}`;
+        const btn = document.getElementById(btnId);
+        
+        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Prüfe Topografie und jahreszeitliche Lichtstimmung</span>`;
+        container.classList.add('visible');
+        btn.disabled = true;
+
+        const day = weekData[dayIdx];
+        const ev = type === 'Morgen' ? day.sunrise : day.sunset;
+        const main = ev.samples[1];
+        const dateString = day.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+        
+        const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine strikt evidenzbasierte Analyse.
+        VERHALTEN: Gib NUR den finalen Analysetext aus. Keine internen Regeln texten. Beende jeden Satz logisch.
+        FORMAT: KEIN Markdown (keine Sternchen). KEIN Kameramodell nennen.
+        KONTEXT: Berücksichtige das Datum (Jahreszeit/Sonnenstand) und den Ort (Landschaftstyp/Topografie) NUR dann, wenn sie eine relevante Auswirkung auf das Licht oder die Strategie haben. Vermeide Standardfloskeln.
+        Nutze GENAU diese Marker für Abschnitte: [SKY], [SINGLE], [TIMELAPSE].`;
+        
+        // FIX: Removed invalid ${lat} reference which caused ReferenceError
+        const userQuery = `Kontext: ${locName} (lat:${currentLoc.lat}, lon:${currentLoc.lon}). Datum: ${dateString}. Tour: ${type}.
+        Wetterdaten: Temperatur ${main.temp}°C, Taupunkt-Abstand ${ev.dewSpread.toFixed(1)}K. 
+        Wolkenverteilung: Tief ${main.cLow}%, Mittel ${main.cMid}%, Hoch ${main.cHigh}%.
+        Windbedingungen: Grundwind ${main.wind} km/h, Böen ${main.gust} km/h.
+        Blitzrisiko: ${main.lightning}%. Mond: ${day.moon.phase}.
+        
+        Analysiere präzise:
+        [SKY] Bewertung des ästhetischen Potentials (Lichtbrechung, Horizont, Fronten). Erwähne Jahreszeit/Landschaft nur bei technischer Relevanz.
+        [SINGLE] Empfehlung für Einzelaufnahme.
+        [TIMELAPSE] Empfehlung für Zeitraffer.`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        temperature: 0.0,
+                        maxOutputTokens: 2048,
+                        topP: 1,
+                        topK: 1
+                    }
+                })
+            });
+
+            const result = await response.json();
+            let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Analyse momentan nicht verfügbar.";
+            text = text.replace(/\*/g, '').replace(/Rule \d+:.*/gi, '').trim();
+            
+            const formattedText = text
+                .replace(/\[SKY\]/gi, '<div class="ai-section-title">Atmosphäre & Potential</div>')
+                .replace(/\[SINGLE\]/gi, '<div class="ai-section-title">Einzelaufnahme</div>')
+                .replace(/\[TIMELAPSE\]/gi, '<div class="ai-section-title">Timelapse</div>');
+
+            container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE</div><div style="white-space: pre-wrap;">${formattedText}</div>`;
+        } catch (e) {
+            container.innerHTML = `<div class="ai-header">Fehler</div>Analyse konnte nicht abgeschlossen werden.`;
+        } finally { btn.disabled = false; }
+    }
+
     function analyzeEvent(type, timeStr, hourly) {
-        if (!timeStr || !hourly || !hourly.time) return null;
+        if (!timeStr || !hourly) return null;
         const target = new Date(timeStr).getTime();
         let idx = 0; let min = Infinity;
-        hourly.time.forEach((t, i) => { 
-            const d = Math.abs(new Date(t + ":00Z").getTime() - target); 
-            if (d < min) { min = d; idx = i; } 
-        });
+        hourly.time.forEach((t, i) => { const d = Math.abs(new Date(t + ":00Z").getTime() - target); if (d < min) { min = d; idx = i; } });
         
         const samples = [-1, 0, 1].map(o => {
             const i = idx + o;
             return {
                 label: o === 0 ? (type === 'sunrise' ? 'Aufgang' : 'Untergang') : (o > 0 ? `+${o}h` : `${o}h`),
-                temp: hourly.temperature_2m[i] || 0,
-                hum: hourly.relative_humidity_2m[i] || 0,
-                dew: hourly.dew_point_2m[i] || 0,
-                cTot: hourly.cloud_cover[i] || 0,
-                cLow: hourly.cloud_cover_low[i] || 0,
-                cMid: hourly.cloud_cover_mid[i] || 0,
-                cHigh: hourly.cloud_cover_high[i] || 0,
-                prec: hourly.precipitation_probability[i] || 0,
-                wind: hourly.wind_speed_10m[i] || 0,
-                gust: hourly.wind_gusts_10m[i] || 0
+                temp: hourly.temperature_2m[i] || 0, hum: hourly.relative_humidity_2m[i] || 0,
+                dew: hourly.dew_point_2m[i] || 0, cTot: hourly.cloud_cover[i] || 0,
+                cLow: hourly.cloud_cover_low[i] || 0, cMid: hourly.cloud_cover_mid[i] || 0,
+                cHigh: hourly.cloud_cover_high[i] || 0, wind: hourly.wind_speed_10m[i] || 0,
+                gust: hourly.wind_gusts_10m[i] || 0, prec: hourly.precipitation_probability[i] || 0,
+                lightning: (hourly.lightning_potential || [])[i] || 0
             };
         });
 
         const m = samples[1];
-        let lS = 20, dS = 10, tlS = 50, rS = Math.max(5, (m.prec * 0.9) + (m.gust > 42 ? 35 : 0));
-        
-        if (m.cHigh > 20 && m.cHigh < 85) lS += 40; 
-        if (m.cMid > 10 && m.cMid < 70) lS += 25;
-        if (m.cLow > 55) lS -= 50; 
-        if (m.cTot < 5) lS = 65; else if (m.cLow > 85) lS = 5; 
-        
-        dS += (m.cTot > 35 && m.cTot < 90) ? 40 : 5; 
-        if (m.prec > 15) dS += 30; 
+        let lS = 20; 
+        if (m.cHigh > 25 && m.cHigh < 85) lS += 45; 
+        if (m.cMid > 15 && m.cMid < 70) lS += 15;
+        if (m.cLow > 45) lS -= 55; 
+        if (m.cTot < 5) lS = 65;
+        lS = Math.max(0, Math.min(100, lS));
 
-        let interval = (m.wind < 8) ? "10-15s" : (m.wind < 18 ? "5-8s" : (m.wind < 30 ? "3s" : "2s"));
-        const fogRisk = (m.hum > 92 && (m.temp - m.dew) < 1.2 && m.wind < 8) ? "Hoch" : "Gering";
-        const ndFilter = m.cTot > 15 && m.wind > 12 ? "ND 64 / 1000 empfohlen" : "Nicht nötig";
+        const maxPrec = Math.max(...samples.map(s => s.prec));
+        const maxGust = Math.max(...samples.map(s => s.gust));
+        const maxLight = Math.max(...samples.map(s => s.lightning));
+        const minTemp = Math.min(...samples.map(s => s.temp));
         
-        // --- SCORE CLAMPING (0-100) ---
-        lS = Math.max(0, Math.min(100, Math.round(lS)));
-        dS = Math.max(0, Math.min(100, Math.round(dS)));
-        rS = Math.max(0, Math.min(100, Math.round(rS)));
+        let riskNotes = [];
+        let rS = 5 + (maxPrec * 0.9); 
+        if (maxPrec > 30) riskNotes.push("Niederschlag");
+        if (maxGust > 42) { rS += 35; riskNotes.push("Windböen (Stativ!)"); }
+        if (maxLight > 15) { rS += 60; riskNotes.push("BLITZGEFAHR"); }
+        if (minTemp < 1) { rS += 15; riskNotes.push("Frost"); }
+        
+        const dewSpread = m.temp - m.dew;
+        if (m.hum > 88 && dewSpread < 1.5) riskNotes.push("Linsenbeschlag");
+        
+        let interval = (m.wind < 6) ? "6-8s" : (m.wind < 15 ? "4-5s" : "2-3s");
 
-        const finalScore = Math.max(0, Math.min(100, Math.round((lS * 0.45) + (dS * 0.35) + (tlS * 0.2) - (rS * 0.25))));
-
-        return { score: finalScore, sub: { light: lS, drama: dS, risk: rS }, samples, fogRisk, interval, ndFilter, time: timeStr.split('T')[1] };
+        const finalScore = Math.max(0, Math.min(100, Math.round((lS * 0.45) + (35 * 0.35) + (50 * 0.2) - (rS * 0.3))));
+        return { score: finalScore, sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, samples, interval, time: timeStr.split('T')[1], riskNotes, dewSpread };
     }
 
     async function fetchWeather(latRaw, lonRaw, name) {
         const lat = parseFloat(Number(latRaw).toFixed(2));
         const lon = parseFloat(Number(lonRaw).toFixed(2));
         const status = document.getElementById('status');
-        status.innerHTML = `Analysiere <span style="color:var(--accent); font-weight:700;">${name}</span><br><small style="opacity:0.6">Gitterpunkt: ${lat} / ${lon}</small> <span class="loading-dots"></span>`;
+        status.innerHTML = `<span class="loading-dots">Analysiere Licht für ${name}</span>`;
         currentLoc = { lat, lon, name };
         localStorage.setItem(LAST_LOC_KEY, JSON.stringify(currentLoc));
         updateFavBtn();
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_gusts_10m&daily=sunrise,sunset`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_gusts_10m,lightning_potential&daily=sunrise,sunset`;
             const data = await fetchWithRetry(url);
-            
             weekData = [];
             for(let i=0; i<7; i++) {
-                const sRise = data.daily?.sunrise?.[i];
-                const sSet = data.daily?.sunset?.[i];
-                const dayDate = sRise ? new Date(sRise) : new Date();
+                const sRise = data.daily.sunrise[i];
+                const dayDate = new Date(sRise);
                 weekData.push({
                     date: dayDate,
                     sunrise: analyzeEvent('sunrise', sRise, data.hourly),
-                    sunset: analyzeEvent('sunset', sSet, data.hourly),
+                    sunset: analyzeEvent('sunset', data.daily.sunset[i], data.hourly),
                     moon: { phase: getMoonPhase(dayDate) }
                 });
             }
-            renderRanking();
             renderForecast(name);
             status.innerHTML = `<strong>${name}</strong> (${lat}, ${lon})<br><small>Stand: ${new Date().toLocaleTimeString()} Uhr</small>`;
         } catch(e) { showErr(`Abfragefehler: ${e.message}`); }
@@ -335,134 +324,105 @@
         if (!q) return;
         const btn = document.getElementById('searchBtn'); btn.disabled = true;
         try {
-            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=de&format=json`;
-            const data = await fetchWithRetry(url);
+            const data = await fetchWithRetry(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=de&format=json`);
             const list = document.getElementById('searchResults');
-            if (!data.results || data.results.length === 0) {
-                showErr("Kein Ort unter diesem Namen gefunden.");
-                list.classList.add('hidden');
-            } else {
-                list.innerHTML = data.results.map(r => `<li onclick="selectResult(${r.latitude}, ${r.longitude}, '${r.name.replace(/'/g, "\\'")}')">${r.name} (${r.country}) <small style="opacity:0.5">${r.latitude.toFixed(2)}/${r.longitude.toFixed(2)}</small></li>`).join('');
-                list.classList.remove('hidden');
-                document.getElementById('status').innerText = "Bitte wählen Sie einen Ort aus der Liste.";
-            }
-        } catch(e) { showErr(`Suche fehlgeschlagen: ${e.message}`); } finally { btn.disabled = false; }
+            if (!data.results) { showErr("Ort nicht gefunden."); return; }
+            list.innerHTML = data.results.map(r => `<li onclick="selectResult(${r.latitude}, ${r.longitude}, '${r.name.replace(/'/g, "\\'")}')">${r.name} (${r.country}) <small style="opacity:0.5">${r.latitude.toFixed(2)}/${r.longitude.toFixed(2)}</small></li>`).join('');
+            list.classList.remove('hidden');
+        } catch(e) { showErr(`Suche fehlgeschlagen.`); } finally { btn.disabled = false; }
     }
 
     window.selectResult = (lat, lon, name) => { 
-        document.getElementById('searchResults').classList.add('hidden'); 
+        const list = document.getElementById('searchResults');
+        while (list.firstChild) { list.removeChild(list.firstChild); }
+        list.classList.add('hidden'); 
         fetchWeather(lat, lon, name); 
     };
 
     async function useGPS() {
-        const btn = document.getElementById('gpsBtn');
-        btn.disabled = true;
-        document.getElementById('status').innerHTML = `<span class="loading-dots">Ermittle präzise GPS-Koordinaten</span>`;
+        const btn = document.getElementById('gpsBtn'); btn.disabled = true;
+        document.getElementById('status').innerHTML = `<span class="loading-dots">Bestimme Standort</span>`;
         navigator.geolocation.getCurrentPosition(
             async p => {
-                const lat = p.coords.latitude;
-                const lon = p.coords.longitude;
-                let name = "Aktueller Standort";
-                document.getElementById('status').innerHTML = `<span class="loading-dots">Koordinaten erhalten, bestimme Ortsnamen</span>`;
+                const { latitude: lat, longitude: lon } = p.coords;
+                let name = "GPS Standort";
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=de`);
                     const data = await res.json();
-                    if (data && data.address) {
-                        name = data.address.city || data.address.town || data.address.village || data.address.suburb || name;
-                    }
+                    name = data.address.city || data.address.town || data.address.village || name;
                 } catch(e) {}
                 fetchWeather(lat, lon, name);
                 btn.disabled = false;
             },
-            e => { showErr("GPS-Zugriff fehlgeschlagen."); btn.disabled = false; },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            e => { showErr("GPS Zugriff verweigert."); btn.disabled = false; },
+            { enableHighAccuracy: true }
         );
     }
-
-    function renderRanking() {
-        const container = document.getElementById('rankingContainer');
-        const grid = document.getElementById('rankingGrid');
-        let flat = [];
-        weekData.forEach(d => { 
-            if (d.sunrise) flat.push({ label: 'Morgentour', d: d.date, s: d.sunrise });
-            if (d.sunset) flat.push({ label: 'Abendtour', d: d.date, s: d.sunset });
-        });
-        flat.sort((a,b) => (b.s?.score || 0) - (a.s?.score || 0));
-        grid.innerHTML = flat.slice(0, 3).map(r => `
-            <div class="rank-card" onclick="openDayByDate('${r.d.toDateString()}')">
-                <div class="rank-info"><strong>${r.d.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</strong><br><span style="color:var(--text-muted)">${r.label}</span></div>
-                <div class="rank-score" style="color:${getScoreColor(r.s.score)}">${r.s.score}%</div>
-            </div>
-        `).join('');
-        container.classList.remove('hidden');
-    }
-
-    window.openDayByDate = (dateStr) => {
-        const cards = document.querySelectorAll('.day-accordion');
-        cards.forEach(c => {
-            const name = c.querySelector('.day-name').getAttribute('data-date');
-            if (name === dateStr) { c.classList.add('open'); c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-            else { c.classList.remove('open'); }
-        });
-    };
 
     function renderForecast(name) {
         const container = document.getElementById('forecast');
         document.getElementById('dashboard').classList.remove('hidden');
-        container.innerHTML = weekData.map((day, idx) => {
-            const dateStr = day.date.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'});
-            const srS = day.sunrise?.score || 0, ssS = day.sunset?.score || 0;
-            return `
-                <div class="day-accordion ${idx === 0 ? 'open' : ''}">
-                    <div class="day-header" onclick="this.parentElement.classList.toggle('open')">
-                        <span class="day-name" data-date="${day.date.toDateString()}">${dateStr}</span>
-                        <div class="day-pills">
-                            <span class="pill" style="background:${getScoreColor(srS)}">Früh: ${srS}%</span>
-                            <span class="pill" style="background:${getScoreColor(ssS)}">Spät: ${ssS}%</span>
-                            ${ICONS.chevron}
-                        </div>
-                    </div>
-                    <div class="day-content">
-                        <div style="font-size:0.75rem; margin-bottom:15px; color:var(--text-muted);"><span>${ICONS.moon} ${day.moon.phase}</span></div>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
-                            ${renderEvHTML(day.sunrise, 'Morgentour', 'Sonnenaufgang', ICONS.sunrise)}
-                            ${renderEvHTML(day.sunset, 'Abendtour', 'Sonnenuntergang', ICONS.sunset)}
-                        </div>
-                        <button class="btn-secondary" style="margin-top:15px; width:100%; font-size:0.7rem;" onclick="copyLog('${name}', ${idx})">
-                            ${ICONS.export} Analyse für Logbuch kopieren
-                        </button>
+        container.innerHTML = weekData.map((day, idx) => `
+            <div class="day-accordion ${idx === 0 ? 'open' : ''}">
+                <div class="day-header" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="day-name">${day.date.toLocaleDateString('de-DE', {weekday:'long', day:'2-digit', month:'long'})}</span>
+                    <div class="day-pills">
+                        <span class="pill" style="background:${getScoreColor(day.sunrise.score)}">Früh: ${day.sunrise.score}%</span>
+                        <span class="pill" style="background:${getScoreColor(day.sunset.score)}">Spät: ${day.sunset.score}%</span>
+                        ${ICONS.chevron}
                     </div>
                 </div>
-            `;
-        }).join('');
+                <div class="day-content">
+                    <div style="font-size:0.75rem; margin-bottom:15px; color:var(--text-muted);"><span>${ICONS.moon} ${day.moon.phase}</span></div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;">
+                        ${renderEvHTML(day.sunrise, 'Morgentour', 'Sonnenaufgang', ICONS.sunrise, name, idx, 'Morgen')}
+                        ${renderEvHTML(day.sunset, 'Abendtour', 'Sonnenuntergang', ICONS.sunset, name, idx, 'Abend')}
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
-    function renderEvHTML(ev, label, timeLabel, icon) {
+    function renderEvHTML(ev, label, timeLabel, icon, locName, dayIdx, type) {
         if (!ev) return '';
-        let interp = "Mischwetterlage. Motiv-Flexibilität erforderlich.";
-        if (ev.sub.light > 75 && ev.sub.risk < 20) interp = `Exzellente Bedingungen für den ${timeLabel}.`;
-        else if (ev.sub.drama > 70 && ev.sub.risk < 45) interp = "Hervorragendes Wetter-Drama durch Wolkenstrukturen.";
-        else if (ev.samples[1].cLow > 80) interp = "Dichte Bewölkung am Horizont. Fokus auf Nahbereich.";
+        const safety = Math.max(0, 100 - ev.sub.risk);
+        const sColor = getBarColor(safety);
+        const isLightning = ev.riskNotes.some(n => n.includes("BLITZ"));
+        const interpretBox = isLightning 
+            ? `<div class="interpretation" style="border-left-color:red; background:rgba(255,0,0,0.1); color:red; font-weight:700;">GEWITTERGEFAHR: Lebensgefahr im freien Feld und Schutz der Elektronik beachten!</div>`
+            : `<div class="interpretation">${ev.riskNotes.length > 0 ? '<strong>Hinweise zur Sicherheit:</strong> ' + ev.riskNotes.join(', ') : 'Optimale Ausrüstungs-Sicherheit.'}</div>`;
 
         return `
             <div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">
                     <span style="font-weight:700;">${icon} ${label}</span><span style="opacity:0.8; font-size:0.75rem;">${timeLabel}: <strong>${ev.time} Uhr</strong></span>
                 </div>
-                <div class="dim-row"><div class="dim-label"><span>Licht / Farbe</span><span>${ev.sub.light}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.light)}%; background:var(--excellent)"></div></div></div>
-                <div class="dim-row"><div class="dim-label"><span>Wetter-Drama</span><span>${ev.sub.drama}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.drama)}%; background:var(--good)"></div></div></div>
-                <div class="dim-row"><div class="dim-label"><span>Risiko</span><span>${Math.round(ev.sub.risk)}%</span></div><div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${Math.max(0, ev.sub.risk)}%; background:var(--doubtful)"></div></div></div>
-                <div class="pro-insight-grid">
-                    <div class="insight-box"><div class="insight-label">Nebel-Potential</div><div class="insight-val" style="color:${ev.fogRisk === 'Hoch' ? 'var(--excellent)' : ''}">${ev.fogRisk}</div></div>
-                    <div class="insight-box"><div class="insight-label">Timelapse-Int.</div><div class="insight-val">${ev.interval}</div></div>
-                    <div class="insight-box"><div class="insight-label">ND-Empfehlung</div><div class="insight-val">${ev.ndFilter}</div></div>
+                <div class="dim-row">
+                    <div class="dim-label"><span>Potenzial für Licht/Farbe</span><span>${ev.sub.light}%</span></div>
+                    <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.light}%; background:${getBarColor(ev.sub.light)}"></div></div>
                 </div>
-                <div class="interpretation">${interp}</div>
+                <div class="dim-row">
+                    <div class="dim-label"><span>Ausrüstungs-Sicherheit</span><span style="color:${sColor}; font-weight:700;">${safety}%</span></div>
+                    <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${safety}%; background:${sColor}"></div></div>
+                </div>
+
+                <div class="ai-result-box" id="ai-result-${dayIdx}-${type}"></div>
+                ${interpretBox}
+                
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>Phase</th><th>Temp</th><th>Wolken (G/T/M/H)</th><th>Böen</th></tr></thead>
-                        <tbody>${ev.samples.map(s => `<tr><td>${s.label}</td><td>${s.temp.toFixed(1)}°</td><td>${s.cTot}% (${s.cLow}/${s.cMid}/${s.cHigh})</td><td>${s.gust.toFixed(0)}km/h</td></tr>`).join('')}</tbody>
+                        <thead><tr><th>Phase</th><th>Temp</th><th>Wolken (Ges / Tief / Hoch)</th><th>Wind/Böen</th></tr></thead>
+                        <tbody>${ev.samples.map(s => `<tr><td>${s.label}</td><td>${s.temp.toFixed(0)}°</td><td>${s.cTot}% / ${s.cLow}% / ${s.cHigh}%</td><td>${s.wind.toFixed(0)} / ${s.gust.toFixed(0)} km/h</td></tr>`).join('')}</tbody>
                     </table>
+                </div>
+                
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn-ai" id="ai-btn-${dayIdx}-${type}" onclick="getAIStrategy('${locName}', ${dayIdx}, '${type}')" style="flex:1;">
+                        ${ICONS.ai} ✨ KI Analyse starten
+                    </button>
+                    <button class="btn-secondary" style="flex:1; font-size:0.7rem;" onclick="copyTourLog('${locName}', ${dayIdx}, '${type}')">
+                        ${ICONS.export} Log kopieren
+                    </button>
                 </div>
             </div>
         `;
@@ -476,6 +436,7 @@
     }
     function renderFavorites() {
         const f = getFavs(); const c = document.getElementById('favoritesContainer');
+        if (!c) return;
         c.innerHTML = f.map((x,i) => `<div class="fav-chip" onclick="fetchWeather(${x.lat},${x.lon},'${x.name}')">${x.name} <span onclick="event.stopPropagation(); removeFavorite(${i})">✕</span></div>`).join('');
         c.classList.toggle('hidden', f.length === 0);
     }
@@ -485,11 +446,20 @@
         b.classList.remove('hidden'); b.style.opacity = getFavs().some(x => x.name === currentLoc.name) ? '1' : '0.4'; 
     }
 
-    function copyLog(name, idx) {
-        const d = weekData[idx];
-        const log = `Analyse ${name} (${d.date.toLocaleDateString()}):\nAufgang: ${d.sunrise?.score}% (${d.sunrise?.time})\nUntergang: ${d.sunset?.score}% (${d.sunset?.time})\nMond: ${d.moon.phase}\nIntervall: ${d.sunrise?.interval}`;
+    function copyTourLog(name, dayIdx, type) {
+        const day = weekData[dayIdx];
+        const ev = type === 'Morgen' ? day.sunrise : day.sunset;
+        const main = ev.samples[1];
+        const log = `FOTO-LOG [${name}] - ${day.date.toLocaleDateString()} (${type})
+--------------------------------------------------
+LICHT-SCORE: ${ev.score}% | SICHERHEIT: ${100-ev.sub.risk}%
+WETTER: ${main.temp.toFixed(1)}°C | Feuchte: ${main.hum}% | Taup-Abst: ${ev.dewSpread.toFixed(1)}K
+WOLKEN: Ges: ${main.cTot}% | Tief: ${main.cLow}% | Mittel: ${main.cMid}% | Hoch: ${main.cHigh}%
+WIND: ${main.wind.toFixed(1)} km/h | Böen: ${main.gust.toFixed(1)} km/h
+--------------------------------------------------
+INTERVALL-EMPFEHLUNG: ${ev.interval}`;
         const el = document.createElement('textarea'); el.value = log; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-        const s = document.getElementById('status'); const old = s.innerText; s.innerText = "✓ Kopiert!"; setTimeout(() => s.innerText = old, 2000);
+        const s = document.getElementById('status'); const old = s.innerText; s.innerText = `✓ Log kopiert!`; setTimeout(() => s.innerText = old, 2000);
     }
 
     function init() {
@@ -497,8 +467,7 @@
         if(h) h.onerror = () => { h.src = 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=1200&q=80'; };
         renderFavorites();
         const last = JSON.parse(localStorage.getItem(LAST_LOC_KEY));
-        if (last && last.lat) fetchWeather(last.lat, last.lon, last.name);
-        else document.getElementById('status').innerText = "Warte auf Ortseingabe...";
+        if (last) fetchWeather(last.lat, last.lon, last.name);
     }
     init();
 </script>
