@@ -36,15 +36,23 @@
         
         .hero { 
             height: 180px; 
-            background: #1c1c1e linear-gradient(135deg, #1c1c1e 0%, #3a3a3c 100%);
+            background: #1c1c1e;
             position: relative; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             text-align: center; color: white; border-bottom: 1px solid var(--border); overflow: hidden; 
         }
-        .hero-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.7; z-index: 0; }
-        .hero-content { position: relative; z-index: 1; padding: 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+        .hero-img { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            object-position: center 65%; /* Fokus auf Horizont und Sonne */
+            opacity: 0.85; 
+            z-index: 0; 
+        }
+        .hero-content { position: relative; z-index: 1; padding: 0 20px; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
         .hero h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
-        .hero p { opacity: 0.9; font-size: 0.9rem; margin-top: 4px; font-weight: 500; }
+        .hero p { opacity: 0.95; font-size: 0.9rem; margin-top: 4px; font-weight: 600; }
 
         .container { max-width: 950px; margin: 0 auto 40px; padding: 24px 12px; width: 100%; }
         
@@ -91,8 +99,12 @@
         .dim-bar-bg { height: 7px; background: var(--bg-color); border-radius: 4px; overflow: hidden; }
         .dim-bar-fill { height: 100%; transition: width 1s ease; }
 
-        .interpretation { font-size: 0.88rem; line-height: 1.5; padding: 14px; background: rgba(0, 122, 255, 0.06); border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent); }
-        
+        .decision-label { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; display: block; }
+        .decision-sub { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; display: block; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-right: 6px; margin-bottom: 8px;}
+        .badge-fog { background: rgba(48, 176, 199, 0.15); color: var(--good); border: 1px solid var(--good); }
+        .badge-cond { background: rgba(255, 59, 48, 0.1); color: var(--doubtful); border: 1px solid var(--doubtful); }
+
         .ai-result-box { 
             background: linear-gradient(to right, rgba(168, 85, 247, 0.04), rgba(99, 102, 241, 0.04));
             border: 1px solid rgba(168, 85, 247, 0.15);
@@ -102,6 +114,8 @@
         .ai-result-box.visible { display: block; }
         .ai-header { color: #a855f7; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; }
         .ai-section-title { font-weight: 700; margin-top: 15px; margin-bottom: 6px; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(0, 122, 255, 0.1); padding-bottom: 2px; display: block; width: 100%; }
+        
+        .tldr-box { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 12px; border-left: 3px solid #a855f7; padding-left: 10px; }
         
         .interval-badge { display: inline-block; background: #a855f7; color: white; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-left: 10px; }
 
@@ -121,7 +135,8 @@
 <body>
 
 <div class="hero">
-    <img src="https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80" class="hero-img" id="mainHeroImg" alt="Wetterstimmung">
+    <!-- Header-Bild durch User-Foto ersetzt. Datei DSC09603.jpg muss im selben Ordner liegen. -->
+    <img src="DSC09603.jpg" class="hero-img" id="mainHeroImg" alt="Wetterstimmung Heide" onerror="this.src='https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80'">
     <div class="hero-content">
         <h1>Foto-Wetter Pro</h1>
         <p>Ausrüstungszentrierte Präzisions-Analyse</p>
@@ -138,7 +153,7 @@
         </div>
 
         <div id="keySetup" class="key-setup-banner">
-            <p style="margin:0 0 8px 0;"><strong>KI-Funktion freischalten:</strong> Privater Gemini API Key erforderlich. Speicherung erfolgt rein lokal im Browser.</p>
+            <p style="margin:0 0 8px 0;"><strong>KI-Funktion freischalten:</strong> Privater Gemini API Key erforderlich. Speicherung erfolgt lokal.</p>
             <div style="display:flex; gap:8px;">
                 <input type="password" id="apiKeyInput" placeholder="Schlüssel hier einfügen...">
                 <button class="btn-primary" onclick="saveApiKey()" style="padding:8px 14px;">Aktivieren</button>
@@ -161,13 +176,12 @@
 
 <script>
     /**
-     * REVISIONS-HISTORIE (v58)
+     * REVISIONS-HISTORIE (v60)
      * --------------------------------------------------
-     * v58: Implementierung Revisions-Header & Sicherungsstrategie
-     * v57: KI-Intervall-Coach Integration (Interval Badge & Logik)
-     * v56: GPS Integration (Secure Context Reaktivierung)
-     * v55: Kreativer Wetter-Prompt (Wetter als Motivchance)
-     * v54: JSON-Architektur & Quota Handling
+     * v60: Header-Bild durch DSC09603.jpg (Heide-Sonnenuntergang) ersetzt und Beschnitt optimiert
+     * v59.3: Copy-Paste Failsafe für API-Key Input & KI-Fokus auf Brennweiten
+     * v59.1: Failsafe-Parser für JSON-Datenstrukturen ergänzt ([object Object] Fix)
+     * v59: UX Overhaul - Handlungsorientierte Labels, Nebel/Kondensations-Badges, KI Kurzfazit
      * --------------------------------------------------
      */
 
@@ -191,6 +205,10 @@
     function saveApiKey() {
         const val = document.getElementById('apiKeyInput').value.trim();
         if (val) {
+            if (val.includes(" ") || val.includes("object")) {
+                showErr("Ungültiges Format: API-Key darf keinen Text oder Leerzeichen enthalten.");
+                return;
+            }
             localStorage.setItem(API_KEY_STORAGE, val);
             document.getElementById('keySetup').classList.remove('active');
             const status = document.getElementById('status');
@@ -250,6 +268,14 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
+    function getDecisionLabel(score) {
+        if (score >= 81) return { text: "🔥 Epische Bedingungen", color: "var(--excellent)" };
+        if (score >= 66) return { text: "✨ Rausgehen lohnt sich", color: "var(--excellent)" };
+        if (score >= 46) return { text: "👍 Solide Fotogelegenheit", color: "var(--good)" };
+        if (score >= 26) return { text: "🚶‍♂️ Nur für Spaziergang / Details", color: "var(--neutral)" };
+        return { text: " Couch-Wetter / Nicht lohnend", color: "var(--doubtful)" };
+    }
+
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
@@ -265,7 +291,7 @@
         const btnId = `ai-btn-${dayIdx}-${type}`;
         const btn = document.getElementById(btnId);
         
-        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Berechne Intervall & Strategie</span>`;
+        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ASSISTENT LÄUFT...</div><span class="loading-dots">Analysiere Setup & Motive</span>`;
         container.classList.add('visible');
         btn.disabled = true;
 
@@ -277,23 +303,18 @@
         const isCanvas = window.location.hostname.includes('usercontent.goog');
         const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
         
-        const systemPrompt = `Du bist ein rationaler Foto-Experte für Sony Alpha 7 IV und Insta360 X5. Erstelle eine evidenzbasierte Analyse.
-Fasse dich kurz (max. 3 Sätze pro Feld). Nenne keine Kameramodelle im Text, außer zur spezifischen Gear-Wahl.
-WICHTIG: Begreife Wetterphänomene als Motivchance.
-BERECHNE EIN OPTIMALES TIMELAPSE-INTERVALL basierend auf der Windgeschwindigkeit (Cloud-Drift) und Lichtphase.
-Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "interval_val", "interval_reason".`;
+        const systemPrompt = `Du bist ein rationaler Produktions-Assistent.
+Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit exakt diesen Schlüsseln: "tldr", "motives_gear", "timelapse", "interval_val", "interval_reason".
+1. "tldr": Knallhartes Kurzfazit in 1 Satz (Lohnt sich die Tour? Welche Kernstimmung herrscht?).
+2. "motives_gear": Ein zusammenhängender Text mit 2 Motiv-Ideen. Empfiehl passende Objektive/Brennweiten. Erwähne die Sony A7 IV nur bei zwingender technischer Notwendigkeit.
+3. "timelapse": Strategie basierend auf Wolkenzug.
+4. "interval_val": Eine Zahl (z.B. "4s").
+5. "interval_reason": Kurze Begründung.`;
         
         const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}.
         Wetter: Temp ${main.temp}°C, Niederschlag ${main.prec}%, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
         Wolken: Tief ${main.cLow}%, Mittel ${main.cMid}%, Hoch ${main.cHigh}%. 
-        Wind: Boden ${main.wind} km/h (Böen ${main.gust} km/h). Mond: ${day.moon.phase}.
-        
-        Bewerte:
-        1. "sky": Ästhetisches Potential.
-        2. "single": Kreatives Motiv unter Nutzung des Wetters.
-        3. "timelapse": Strategische Bewertung der Dynamik.
-        4. "interval_val": Eine Zahl (z.B. "2s" oder "5s").
-        5. "interval_reason": Kurze Begründung basierend auf Cloud-Drift/Lichtwechsel.`;
+        Wind: ${main.wind} km/h (Böen ${main.gust} km/h). Mond: ${day.moon.phase}. Score: ${ev.score}%`;
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`, {
@@ -313,21 +334,30 @@ Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "in
             if (!rawText) throw new Error("Leere Antwort vom Modell.");
 
             const aiData = JSON.parse(rawText);
+            const parseVal = (val) => {
+                if (!val) return "Keine Daten.";
+                if (typeof val === 'string') return val;
+                if (Array.isArray(val)) return "• " + val.map(v => typeof v === 'object' ? JSON.stringify(v) : v).join("<br>• ");
+                return JSON.stringify(val);
+            };
             
             const formattedText = `
-                <div class="ai-section-title">Atmosphäre & Potential</div>
-                <div style="margin-bottom: 12px;">${aiData.sky || "Keine Daten."}</div>
-                <div class="ai-section-title">Einzelaufnahme</div>
-                <div style="margin-bottom: 12px;">${aiData.single || "Keine Daten."}</div>
-                <div class="ai-section-title">
-                    Timelapse-Strategie 
-                    <span class="interval-badge">${aiData.interval_val || "N/A"}</span>
-                </div>
-                <div style="font-size: 0.8rem; font-weight: 600; color: #a855f7; margin-bottom: 4px;">Coach: ${aiData.interval_reason || ""}</div>
-                <div>${aiData.timelapse || "Keine Daten."}</div>
+                <div class="tldr-box">${parseVal(aiData.tldr)}</div>
+                <div class="ai-section-title">Motiv & Setup</div>
+                <div style="margin-bottom: 12px;">${parseVal(aiData.motives_gear)}</div>
+                
+                <details style="margin-top: 10px; cursor: pointer;">
+                    <summary class="ai-section-title" style="display: list-item; user-select: none;">
+                        Timelapse Strategie <span class="interval-badge">${parseVal(aiData.interval_val).replace(/["'{}]/g, '')}</span>
+                    </summary>
+                    <div style="padding-top: 8px;">
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #a855f7; margin-bottom: 4px;">Coach: ${parseVal(aiData.interval_reason)}</div>
+                        <div>${parseVal(aiData.timelapse)}</div>
+                    </div>
+                </details>
             `;
 
-            container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE & INTERVALL</div><div>${formattedText}</div>`;
+            container.innerHTML = `<div class="ai-header">${ICONS.ai} PRODUKTIONS-ASSISTENT</div><div>${formattedText}</div>`;
         } catch (e) {
             let errorMsg = e.message;
             if (errorMsg.toLowerCase().includes("quota") || errorMsg.includes("429")) {
@@ -377,17 +407,22 @@ Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "in
         let riskNotes = [];
         let rS = 5 + (maxPrec * 0.9); 
         if (maxPrec > 30) riskNotes.push("Niederschlag");
-        if (maxGust > 42) { rS += 35; riskNotes.push("Windböen (Stativ!)"); }
+        if (maxGust > 42) { rS += 35; riskNotes.push("Windböen"); }
         if (maxLight > 15) { rS += 60; riskNotes.push("BLITZGEFAHR"); }
         if (minTemp < 1) { rS += 15; riskNotes.push("Frost"); }
         
         const dewSpread = m.temp - m.dew;
-        if (m.hum > 88 && dewSpread < 1.5) riskNotes.push("Linsenbeschlag");
+        const isFoggy = m.hum >= 93 && dewSpread <= 2.0 && m.wind < 15;
+        const isCondensation = dewSpread < 1.5;
         
         const safetyScore = Math.max(0, 100 - rS);
         const finalScore = Math.round((lS * 0.6) + (safetyScore * 0.4));
         
-        return { score: finalScore, sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, samples, time: timeStr.split('T')[1], riskNotes, dewSpread };
+        return { 
+            score: finalScore, 
+            sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, 
+            samples, time: timeStr.split('T')[1], riskNotes, dewSpread, isFoggy, isCondensation 
+        };
     }
 
     async function fetchWeather(latRaw, lonRaw, name) {
@@ -466,26 +501,32 @@ Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "in
         if (!ev) return '';
         const safety = Math.max(0, 100 - ev.sub.risk);
         const sColor = getBarColor(safety);
-        const interpretBox = ev.riskNotes.some(n => n.includes("BLITZ"))
-            ? `<div class="interpretation" style="border-left-color:red; background:rgba(255,0,0,0.1); color:red; font-weight:700;">GEWITTERGEFAHR: Lebensgefahr im freien Feld und Schutz der Elektronik beachten!</div>`
-            : `<div class="interpretation">${ev.riskNotes.length > 0 ? '<strong>Hinweise:</strong> ' + ev.riskNotes.join(', ') : 'Optimale Ausrüstungs-Sicherheit.'}</div>`;
+        const dLabel = getDecisionLabel(ev.score);
+        
+        let badges = '';
+        if (ev.isFoggy) badges += `<span class="badge badge-fog">Nebelchance</span>`;
+        if (ev.isCondensation) badges += `<span class="badge badge-cond">Kondensationsrisiko!</span>`;
+        if (ev.riskNotes.includes("Niederschlag")) badges += `<span class="badge badge-cond">Regen</span>`;
+        if (ev.riskNotes.includes("Windböen")) badges += `<span class="badge badge-cond">Wind</span>`;
 
         return `
             <div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:5px;">
-                    <span style="font-weight:700;">${icon} ${label}</span><span style="opacity:0.8; font-size:0.75rem;">${timeLabel}: <strong>${ev.time} Uhr</strong></span>
+                <div style="margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                    <span class="decision-label" style="color: ${dLabel.color}">${dLabel.text}</span>
+                    <span class="decision-sub">${icon} ${label} (${ev.score}%) • ${timeLabel}: ${ev.time} Uhr</span>
+                    ${badges}
                 </div>
+                
                 <div class="dim-row">
                     <div class="dim-label"><span>Licht-Potential</span><span>${ev.sub.light}%</span></div>
                     <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.light}%; background:${getBarColor(ev.sub.light)}"></div></div>
                 </div>
                 <div class="dim-row">
-                    <div class="dim-label"><span>Ausrüstungs-Sicherheit</span><span style="color:${sColor}; font-weight:700;">${safety}%</span></div>
+                    <div class="dim-label"><span>Machbarkeit & Komfort</span><span style="color:${sColor}; font-weight:700;">${safety}%</span></div>
                     <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${safety}%; background:${sColor}"></div></div>
                 </div>
 
                 <div class="ai-result-box" id="ai-result-${dayIdx}-${type}"></div>
-                ${interpretBox}
                 
                 <div class="table-container">
                     <table>
@@ -496,10 +537,10 @@ Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "in
                 
                 <div style="display:flex; gap:8px; margin-top:10px;">
                     <button class="btn-ai" id="ai-btn-${dayIdx}-${type}" onclick="getAIStrategy('${locName}', ${dayIdx}, '${type}')" style="flex:1;">
-                        ${ICONS.ai} ✨ KI Analyse starten
+                        ${ICONS.ai} KI-Assistent
                     </button>
                     <button class="btn-secondary" style="flex:1; font-size:0.7rem;" onclick="copyTourLog('${locName}', ${dayIdx}, '${type}')">
-                        ${ICONS.export} Log
+                        ${ICONS.export} Log kopieren
                     </button>
                 </div>
             </div>
@@ -528,7 +569,7 @@ Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "in
         const day = weekData[dayIdx];
         const ev = type === 'Morgen' ? day.sunrise : day.sunset;
         const main = ev.samples[1];
-        const log = `FOTO-LOG [${name}] - ${day.date.toLocaleDateString()} (${type})\nLICHT-SCORE: ${ev.score}% | SICHERHEIT: ${100-ev.sub.risk}%`;
+        const log = `FOTO-LOG [${name}] - ${day.date.toLocaleDateString()} (${type})\nLICHT-SCORE: ${ev.score}% | KOMFORT: ${100-ev.sub.risk}%`;
         const el = document.createElement('textarea'); el.value = log; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
         const s = document.getElementById('status'); const old = s.innerText; s.innerText = `✓ Kopiert`; setTimeout(() => s.innerText = old, 2000);
     }
