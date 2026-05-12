@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Foto-Wetter Pro Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         :root {
             --bg-color: #f2f2f7;
@@ -46,7 +47,7 @@
             top: 0; left: 0; 
             width: 100%; height: 100%; 
             object-fit: cover; 
-            object-position: center 65%; /* Fokus auf Horizont und Sonne */
+            object-position: center 65%;
             opacity: 0.85; 
             z-index: 0; 
         }
@@ -104,6 +105,8 @@
         .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-right: 6px; margin-bottom: 8px;}
         .badge-fog { background: rgba(48, 176, 199, 0.15); color: var(--good); border: 1px solid var(--good); }
         .badge-cond { background: rgba(255, 59, 48, 0.1); color: var(--doubtful); border: 1px solid var(--doubtful); }
+        .badge-horizon-free { background: rgba(36, 176, 75, 0.1); color: var(--excellent); border: 1px solid var(--excellent); }
+        .badge-horizon-blocked { background: rgba(142, 142, 147, 0.15); color: var(--poor); border: 1px solid var(--poor); }
 
         .ai-result-box { 
             background: linear-gradient(to right, rgba(168, 85, 247, 0.04), rgba(99, 102, 241, 0.04));
@@ -135,7 +138,6 @@
 <body>
 
 <div class="hero">
-    <!-- Header-Bild durch User-Foto ersetzt. Datei DSC09603.jpg muss im selben Ordner liegen. -->
     <img src="DSC09603.jpg" class="hero-img" id="mainHeroImg" alt="Wetterstimmung Heide" onerror="this.src='https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80'">
     <div class="hero-content">
         <h1>Foto-Wetter Pro</h1>
@@ -176,8 +178,9 @@
 
 <script>
     /**
-     * REVISIONS-HISTORIE (v60)
+     * REVISIONS-HISTORIE (v61)
      * --------------------------------------------------
+     * v61: Ray-Casting Horizont-Abfrage via SunCalc.js (Multi-Node API Call für cLow in 50/100/150km Entfernung)
      * v60: Header-Bild durch DSC09603.jpg (Heide-Sonnenuntergang) ersetzt und Beschnitt optimiert
      * v59.3: Copy-Paste Failsafe für API-Key Input & KI-Fokus auf Brennweiten
      * v59.1: Failsafe-Parser für JSON-Datenstrukturen ergänzt ([object Object] Fix)
@@ -201,6 +204,19 @@
 
     let currentLoc = null;
     let weekData = [];
+
+    // --- Geodätische Hilfsfunktion: Berechnet Zielkoordinate basierend auf Distanz & Winkel ---
+    function getDestinationPoint(lat, lon, distance_km, bearing_deg) {
+        const R = 6371; // Erdradius in km
+        const brng = bearing_deg * Math.PI / 180;
+        const lat1 = lat * Math.PI / 180;
+        const lon1 = lon * Math.PI / 180;
+        
+        let lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance_km / R) + Math.cos(lat1) * Math.sin(distance_km / R) * Math.cos(brng));
+        let lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(distance_km / R) * Math.cos(lat1), Math.cos(distance_km / R) - Math.sin(lat1) * Math.sin(lat2));
+        
+        return { lat: lat2 * 180 / Math.PI, lon: lon2 * 180 / Math.PI };
+    }
 
     function saveApiKey() {
         const val = document.getElementById('apiKeyInput').value.trim();
@@ -311,7 +327,7 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
 4. "interval_val": Eine Zahl (z.B. "4s").
 5. "interval_reason": Kurze Begründung.`;
         
-        const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}.
+        const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}. Horizont-Freiheit: ${ev.horizonBlocked ? "BLOCKIERT durch tiefe Wolken in der Ferne" : "FREI"}.
         Wetter: Temp ${main.temp}°C, Niederschlag ${main.prec}%, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
         Wolken: Tief ${main.cLow}%, Mittel ${main.cMid}%, Hoch ${main.cHigh}%. 
         Wind: ${main.wind} km/h (Böen ${main.gust} km/h). Mond: ${day.moon.phase}. Score: ${ev.score}%`;
@@ -369,26 +385,38 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
         } finally { btn.disabled = false; }
     }
 
-    function analyzeEvent(type, timeStr, hourly) {
-        if (!timeStr || !hourly) return null;
+    function analyzeEvent(type, timeStr, mainHourly, nodeHourlies) {
+        if (!timeStr || !mainHourly) return null;
         const target = new Date(timeStr).getTime();
         let idx = 0; let min = Infinity;
-        hourly.time.forEach((t, i) => { const d = Math.abs(new Date(t + ":00Z").getTime() - target); if (d < min) { min = d; idx = i; } });
+        mainHourly.time.forEach((t, i) => { const d = Math.abs(new Date(t + ":00Z").getTime() - target); if (d < min) { min = d; idx = i; } });
         
         const samples = [-1, 0, 1].map(o => {
             const i = idx + o;
             return {
                 label: o === 0 ? (type === 'sunrise' ? 'Aufgang' : 'Untergang') : (o > 0 ? `+${o}h` : `${o}h`),
-                temp: hourly.temperature_2m[i] || 0, hum: hourly.relative_humidity_2m[i] || 0,
-                dew: hourly.dew_point_2m[i] || 0, cTot: hourly.cloud_cover[i] || 0,
-                cLow: hourly.cloud_cover_low[i] || 0, cMid: hourly.cloud_cover_mid[i] || 0,
-                cHigh: hourly.cloud_cover_high[i] || 0, wind: hourly.wind_speed_10m[i] || 0,
-                gust: hourly.wind_gusts_10m[i] || 0, prec: hourly.precipitation_probability[i] || 0,
-                lightning: (hourly.lightning_potential || [])[i] || 0
+                temp: mainHourly.temperature_2m[i] || 0, hum: mainHourly.relative_humidity_2m[i] || 0,
+                dew: mainHourly.dew_point_2m[i] || 0, cTot: mainHourly.cloud_cover[i] || 0,
+                cLow: mainHourly.cloud_cover_low[i] || 0, cMid: mainHourly.cloud_cover_mid[i] || 0,
+                cHigh: mainHourly.cloud_cover_high[i] || 0, wind: mainHourly.wind_speed_10m[i] || 0,
+                gust: mainHourly.wind_gusts_10m[i] || 0, prec: mainHourly.precipitation_probability[i] || 0,
+                lightning: (mainHourly.lightning_potential || [])[i] || 0
             };
         });
 
         const m = samples[1];
+        
+        // Horizont-Ray-Casting Prüfung: Prüfe cLow an den 3 Knoten (50km, 100km, 150km)
+        let maxNodeCLow = 0;
+        if (nodeHourlies && nodeHourlies.length === 3) {
+            maxNodeCLow = Math.max(
+                nodeHourlies[0].cloud_cover_low[idx] || 0,
+                nodeHourlies[1].cloud_cover_low[idx] || 0,
+                nodeHourlies[2].cloud_cover_low[idx] || 0
+            );
+        }
+        const horizonBlocked = maxNodeCLow > 60;
+
         let lS = 20; 
         if (m.cTot < 5) {
             lS = 50; 
@@ -397,6 +425,12 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
             if (m.cMid > 15 && m.cMid < 70) lS += 25;   
             if (m.cLow > 45) lS -= 50;                  
         }
+        
+        // Strafe für blockierten Horizont
+        if (horizonBlocked) {
+            lS -= 25;
+        }
+        
         lS = Math.max(0, Math.min(100, lS));
 
         const maxPrec = Math.max(...samples.map(s => s.prec));
@@ -421,7 +455,7 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
         return { 
             score: finalScore, 
             sub: { light: lS, drama: 35, risk: Math.min(100, Math.round(rS)) }, 
-            samples, time: timeStr.split('T')[1], riskNotes, dewSpread, isFoggy, isCondensation 
+            samples, time: timeStr.split('T')[1], riskNotes, dewSpread, isFoggy, isCondensation, horizonBlocked
         };
     }
 
@@ -429,22 +463,50 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
         const lat = parseFloat(Number(latRaw).toFixed(2));
         const lon = parseFloat(Number(lonRaw).toFixed(2));
         const status = document.getElementById('status');
-        status.innerHTML = `<span class="loading-dots">Analysiere für ${name}</span>`;
+        status.innerHTML = `<span class="loading-dots">Ray-Casting Horizont für ${name}</span>`;
         currentLoc = { lat, lon, name };
         localStorage.setItem(LAST_LOC_KEY, JSON.stringify(currentLoc));
         updateFavBtn();
 
         try {
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_gusts_10m,lightning_potential&daily=sunrise,sunset`;
-            const data = await fetchWithRetry(url);
+            // 1. Azimut-Winkel für HEUTE berechnen
+            const today = new Date();
+            const times = SunCalc.getTimes(today, lat, lon);
+            const posSunrise = SunCalc.getPosition(times.sunrise, lat, lon);
+            const posSunset = SunCalc.getPosition(times.sunset, lat, lon);
+            
+            // SunCalc Azimuth: 0 ist Süd. Umrechnung auf Standard-Kompass (0=Nord)
+            const azSunrise = (posSunrise.azimuth * 180 / Math.PI + 180) % 360;
+            const azSunset = (posSunset.azimuth * 180 / Math.PI + 180) % 360;
+
+            // 2. Horizon-Gates generieren (50km, 100km, 150km entlang des Azimuts)
+            const dists = [50, 100, 150];
+            const morningNodes = dists.map(d => getDestinationPoint(lat, lon, d, azSunrise));
+            const eveningNodes = dists.map(d => getDestinationPoint(lat, lon, d, azSunset));
+
+            // Arrays für die API zusammenbauen (Index 0 = Main, 1-3 = Morgen, 4-6 = Abend)
+            const lats = [lat, ...morningNodes.map(n=>n.lat.toFixed(2)), ...eveningNodes.map(n=>n.lat.toFixed(2))].join(',');
+            const lons = [lon, ...morningNodes.map(n=>n.lon.toFixed(2)), ...eveningNodes.map(n=>n.lon.toFixed(2))].join(',');
+
+            // 3. Multi-Koordinaten API Request
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&timezone=auto&forecast_days=7&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation_probability,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_gusts_10m,lightning_potential&daily=sunrise,sunset`;
+            
+            const dataResponse = await fetchWithRetry(url);
+            
+            // Open-Meteo liefert bei mehreren Koordinaten ein Array zurück
+            const responses = Array.isArray(dataResponse) ? dataResponse : [dataResponse];
+            const mainData = responses[0];
+            const mornHourlies = responses.slice(1, 4).map(r => r.hourly);
+            const eveHourlies = responses.slice(4, 7).map(r => r.hourly);
+
             weekData = [];
             for(let i=0; i<7; i++) {
-                const sRise = data.daily.sunrise[i];
+                const sRise = mainData.daily.sunrise[i];
                 const dayDate = new Date(sRise);
                 weekData.push({
                     date: dayDate,
-                    sunrise: analyzeEvent('sunrise', sRise, data.hourly),
-                    sunset: analyzeEvent('sunset', data.daily.sunset[i], data.hourly),
+                    sunrise: analyzeEvent('sunrise', sRise, mainData.hourly, mornHourlies),
+                    sunset: analyzeEvent('sunset', mainData.daily.sunset[i], mainData.hourly, eveHourlies),
                     moon: { phase: getMoonPhase(dayDate) }
                 });
             }
@@ -508,6 +570,12 @@ Antworte ZWINGEND als flaches JSON-Objekt (alle Werte reine Text-Strings) mit ex
         if (ev.isCondensation) badges += `<span class="badge badge-cond">Kondensationsrisiko!</span>`;
         if (ev.riskNotes.includes("Niederschlag")) badges += `<span class="badge badge-cond">Regen</span>`;
         if (ev.riskNotes.includes("Windböen")) badges += `<span class="badge badge-cond">Wind</span>`;
+        
+        if (ev.horizonBlocked) {
+            badges += `<span class="badge badge-horizon-blocked">Horizont blockiert</span>`;
+        } else {
+            badges += `<span class="badge badge-horizon-free">Horizont frei</span>`;
+        }
 
         return `
             <div>
