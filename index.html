@@ -103,7 +103,6 @@
         .ai-header { color: #a855f7; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; }
         .ai-section-title { font-weight: 700; margin-top: 15px; margin-bottom: 6px; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(0, 122, 255, 0.1); padding-bottom: 2px; display: block; width: 100%; }
         
-        /* New Interval Highlight */
         .interval-badge { display: inline-block; background: #a855f7; color: white; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-left: 10px; }
 
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); margin-top: 10px; }
@@ -161,6 +160,17 @@
 </div>
 
 <script>
+    /**
+     * REVISIONS-HISTORIE (v58)
+     * --------------------------------------------------
+     * v58: Implementierung Revisions-Header & Sicherungsstrategie
+     * v57: KI-Intervall-Coach Integration (Interval Badge & Logik)
+     * v56: GPS Integration (Secure Context Reaktivierung)
+     * v55: Kreativer Wetter-Prompt (Wetter als Motivchance)
+     * v54: JSON-Architektur & Quota Handling
+     * --------------------------------------------------
+     */
+
     const STORAGE_KEY = 'foto_pro_app_favorites_v5';
     const LAST_LOC_KEY = 'foto_pro_app_last_loc_v5';
     const API_KEY_STORAGE = 'foto_pro_gemini_api_key_v5';
@@ -240,7 +250,6 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
-    // --- ✨ Gemini KI Integration (v57: KI-Intervall-Coach) ---
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
