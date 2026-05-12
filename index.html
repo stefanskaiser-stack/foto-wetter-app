@@ -59,6 +59,7 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-secondary { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-gps { background: var(--bg-color); color: var(--accent); border: 1px solid var(--accent); padding: 10px; width: 46px; }
         .btn-ai { background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); color: white; box-shadow: var(--ai-glow); }
 
         .key-setup-banner { 
@@ -101,6 +102,9 @@
         .ai-result-box.visible { display: block; }
         .ai-header { color: #a855f7; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; }
         .ai-section-title { font-weight: 700; margin-top: 15px; margin-bottom: 6px; color: var(--accent); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(0, 122, 255, 0.1); padding-bottom: 2px; display: block; width: 100%; }
+        
+        /* New Interval Highlight */
+        .interval-badge { display: inline-block; background: #a855f7; color: white; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-left: 10px; }
 
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 0.7rem; white-space: nowrap; }
@@ -128,6 +132,7 @@
 <div class="container">
     <div class="control-card">
         <div class="search-group">
+            <button class="btn-gps" onclick="getLocation()" title="Aktueller Standort"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg></button>
             <input type="text" id="locInput" placeholder="Ort suchen..." onkeypress="if(event.key==='Enter') searchLocation()">
             <button class="btn-primary" onclick="searchLocation()" id="searchBtn">Suchen</button>
             <button class="btn-secondary hidden" id="saveFavBtn" onclick="toggleFavorite()"><svg class="icon-svg" style="color:#eb4d4b;" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Speichern</button>
@@ -148,7 +153,7 @@
         <div id="favoritesContainer" class="fav-list hidden"></div>
     </div>
 
-    <div id="status" class="status">Bitte wählen Sie einen Standort.</div>
+    <div id="status" class="status">Bitte wählen Sie einen Standort oder nutzen Sie GPS.</div>
 
     <div id="dashboard" class="hidden">
         <div id="forecast"></div>
@@ -156,9 +161,9 @@
 </div>
 
 <script>
-    const STORAGE_KEY = 'foto_pro_app_favorites_v4';
-    const LAST_LOC_KEY = 'foto_pro_app_last_loc_v4';
-    const API_KEY_STORAGE = 'foto_pro_gemini_api_key_v4';
+    const STORAGE_KEY = 'foto_pro_app_favorites_v5';
+    const LAST_LOC_KEY = 'foto_pro_app_last_loc_v5';
+    const API_KEY_STORAGE = 'foto_pro_gemini_api_key_v5';
     const apiKey = ""; 
     
     const ICONS = {
@@ -180,12 +185,34 @@
             document.getElementById('keySetup').classList.remove('active');
             const status = document.getElementById('status');
             status.innerText = "✓ KI-Schnittstelle aktiv.";
-            setTimeout(() => status.innerText = currentLoc ? currentLoc.name : "Warten auf Auswahl", 2000);
+            setTimeout(() => status.innerText = currentLoc ? currentLoc.name : "Bereit", 2000);
         }
     }
 
     function getEffectiveKey() {
         return apiKey || localStorage.getItem(API_KEY_STORAGE) || "";
+    }
+
+    function getLocation() {
+        const status = document.getElementById('status');
+        if (!navigator.geolocation) {
+            showErr("GPS wird von diesem Browser nicht unterstützt.");
+            return;
+        }
+        status.innerHTML = `<span class="loading-dots">Ortung läuft</span>`;
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                fetchWeather(lat, lon, "Aktueller Standort");
+            },
+            (err) => {
+                let msg = "Ortung fehlgeschlagen.";
+                if (err.code === 1) msg = "Standortzugriff verweigert (Systemeinstellung prüfen).";
+                showErr(msg);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
     }
 
     async function fetchWithRetry(url, options = {}, retries = 5, backoff = 1000) {
@@ -213,6 +240,7 @@
         return phase < 0.5 ? "Zunehmender Mond" : "Abnehmender Mond";
     }
 
+    // --- ✨ Gemini KI Integration (v57: KI-Intervall-Coach) ---
     async function getAIStrategy(locName, dayIdx, type) {
         const activeKey = getEffectiveKey();
         const resultId = `ai-result-${dayIdx}-${type}`;
@@ -228,7 +256,7 @@
         const btnId = `ai-btn-${dayIdx}-${type}`;
         const btn = document.getElementById(btnId);
         
-        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Generiere strukturierte Analyse</span>`;
+        container.innerHTML = `<div class="ai-header">${ICONS.ai} KI-ANALYSE LÄUFT...</div><span class="loading-dots">Berechne Intervall & Strategie</span>`;
         container.classList.add('visible');
         btn.disabled = true;
 
@@ -240,21 +268,23 @@
         const isCanvas = window.location.hostname.includes('usercontent.goog');
         const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
         
-        // NEUER PROMPT: Zwingt die KI zur kreativen Betrachtung von Wetterphänomenen
-        const systemPrompt = `Du bist ein rationaler Foto-Experte. Erstelle eine evidenzbasierte Analyse.
-Fasse dich kurz (max. 3 flüssige Sätze pro Feld). Nenne keine Kameramodelle.
-WICHTIG: Begreife extremes Wetter (Wind, Regen) nicht nur als technisches Risiko, sondern aktiv als kreative Motivchance (z.B. Reflexionen, Dynamik in Bäumen, dramatische Moods).
-Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "single", "timelapse".`;
+        const systemPrompt = `Du bist ein rationaler Foto-Experte für Sony Alpha 7 IV und Insta360 X5. Erstelle eine evidenzbasierte Analyse.
+Fasse dich kurz (max. 3 Sätze pro Feld). Nenne keine Kameramodelle im Text, außer zur spezifischen Gear-Wahl.
+WICHTIG: Begreife Wetterphänomene als Motivchance.
+BERECHNE EIN OPTIMALES TIMELAPSE-INTERVALL basierend auf der Windgeschwindigkeit (Cloud-Drift) und Lichtphase.
+Du MUSST im JSON-Format antworten. Schlüssel: "sky", "single", "timelapse", "interval_val", "interval_reason".`;
         
         const userQuery = `Kontext: ${locName}. Datum: ${dateString}. Tour: ${type}.
-        Wetter: Temp ${main.temp}°C, Niederschlagsrisiko ${main.prec}%, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
+        Wetter: Temp ${main.temp}°C, Niederschlag ${main.prec}%, Taupunkt-Abst ${ev.dewSpread.toFixed(1)}K. 
         Wolken: Tief ${main.cLow}%, Mittel ${main.cMid}%, Hoch ${main.cHigh}%. 
         Wind: Boden ${main.wind} km/h (Böen ${main.gust} km/h). Mond: ${day.moon.phase}.
         
         Bewerte:
-        1. "sky": Ästhetisches Potential der Atmosphäre.
-        2. "single": Konkrete Motiv-Empfehlung (inkl. kreativer Nutzung aktueller Wettereffekte).
-        3. "timelapse": Strategie für Zeitraffer (Abwägung: Dynamik der Elemente vs. technisches Risiko).`;
+        1. "sky": Ästhetisches Potential.
+        2. "single": Kreatives Motiv unter Nutzung des Wetters.
+        3. "timelapse": Strategische Bewertung der Dynamik.
+        4. "interval_val": Eine Zahl (z.B. "2s" oder "5s").
+        5. "interval_reason": Kurze Begründung basierend auf Cloud-Drift/Lichtwechsel.`;
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`, {
@@ -263,10 +293,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: userQuery }] }],
                     systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: { 
-                        temperature: 0.4, 
-                        responseMimeType: "application/json" 
-                    }
+                    generationConfig: { temperature: 0.4, responseMimeType: "application/json" }
                 })
             });
 
@@ -283,24 +310,24 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                 <div style="margin-bottom: 12px;">${aiData.sky || "Keine Daten."}</div>
                 <div class="ai-section-title">Einzelaufnahme</div>
                 <div style="margin-bottom: 12px;">${aiData.single || "Keine Daten."}</div>
-                <div class="ai-section-title">Timelapse</div>
+                <div class="ai-section-title">
+                    Timelapse-Strategie 
+                    <span class="interval-badge">${aiData.interval_val || "N/A"}</span>
+                </div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: #a855f7; margin-bottom: 4px;">Coach: ${aiData.interval_reason || ""}</div>
                 <div>${aiData.timelapse || "Keine Daten."}</div>
             `;
 
-            container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE</div><div>${formattedText}</div>`;
+            container.innerHTML = `<div class="ai-header">${ICONS.ai} FOTO-STRATEGIE & INTERVALL</div><div>${formattedText}</div>`;
         } catch (e) {
             let errorMsg = e.message;
             if (errorMsg.toLowerCase().includes("quota") || errorMsg.includes("429")) {
                 errorMsg = "API-Limit erreicht. Bitte warte ca. 60 Sek.";
             } else if (errorMsg.toLowerCase().includes("demand") || errorMsg.includes("503")) {
-                errorMsg = "Temporäre Google Server-Überlastung (High Demand). Bitte in ein paar Sekunden erneut versuchen.";
-            } else if (errorMsg.includes("not found")) {
-                 errorMsg = "Modell-Konfigurationsfehler. API-Key prüfen.";
+                errorMsg = "Temporäre Google Server-Überlastung. Bitte kurz warten.";
             }
             container.innerHTML = `<div class="ai-header" style="color: var(--doubtful);">System-Meldung</div><div style="font-size: 0.85rem;">${errorMsg}</div>`;
-        } finally { 
-            btn.disabled = false; 
-        }
+        } finally { btn.disabled = false; }
     }
 
     function analyzeEvent(type, timeStr, hourly) {
@@ -358,7 +385,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
         const lat = parseFloat(Number(latRaw).toFixed(2));
         const lon = parseFloat(Number(lonRaw).toFixed(2));
         const status = document.getElementById('status');
-        status.innerHTML = `<span class="loading-dots">Analysiere Licht für ${name}</span>`;
+        status.innerHTML = `<span class="loading-dots">Analysiere für ${name}</span>`;
         currentLoc = { lat, lon, name };
         localStorage.setItem(LAST_LOC_KEY, JSON.stringify(currentLoc));
         updateFavBtn();
@@ -379,7 +406,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
             }
             renderForecast(name);
             status.innerHTML = `<strong>${name}</strong> (${lat}, ${lon})<br><small>Stand: ${new Date().toLocaleTimeString()} Uhr</small>`;
-        } catch(e) { showErr(`Abfragefehler: ${e.message}`); }
+        } catch(e) { showErr(`Fehler: ${e.message}`); }
     }
 
     async function searchLocation() {
@@ -430,10 +457,9 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
         if (!ev) return '';
         const safety = Math.max(0, 100 - ev.sub.risk);
         const sColor = getBarColor(safety);
-        const isLightning = ev.riskNotes.some(n => n.includes("BLITZ"));
-        const interpretBox = isLightning 
+        const interpretBox = ev.riskNotes.some(n => n.includes("BLITZ"))
             ? `<div class="interpretation" style="border-left-color:red; background:rgba(255,0,0,0.1); color:red; font-weight:700;">GEWITTERGEFAHR: Lebensgefahr im freien Feld und Schutz der Elektronik beachten!</div>`
-            : `<div class="interpretation">${ev.riskNotes.length > 0 ? '<strong>Hinweise zur Sicherheit:</strong> ' + ev.riskNotes.join(', ') : 'Optimale Ausrüstungs-Sicherheit.'}</div>`;
+            : `<div class="interpretation">${ev.riskNotes.length > 0 ? '<strong>Hinweise:</strong> ' + ev.riskNotes.join(', ') : 'Optimale Ausrüstungs-Sicherheit.'}</div>`;
 
         return `
             <div>
@@ -441,7 +467,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                     <span style="font-weight:700;">${icon} ${label}</span><span style="opacity:0.8; font-size:0.75rem;">${timeLabel}: <strong>${ev.time} Uhr</strong></span>
                 </div>
                 <div class="dim-row">
-                    <div class="dim-label"><span>Potenzial für Licht/Farbe</span><span>${ev.sub.light}%</span></div>
+                    <div class="dim-label"><span>Licht-Potential</span><span>${ev.sub.light}%</span></div>
                     <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${ev.sub.light}%; background:${getBarColor(ev.sub.light)}"></div></div>
                 </div>
                 <div class="dim-row">
@@ -454,8 +480,8 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                 
                 <div class="table-container">
                     <table>
-                        <thead><tr><th>Phase</th><th>Temp</th><th>Wolken (Ges / Tief / Hoch)</th><th>Wind/Böen</th></tr></thead>
-                        <tbody>${ev.samples.map(s => `<tr><td>${s.label}</td><td>${s.temp.toFixed(0)}°</td><td>${s.cTot}% / ${s.cLow}% / ${s.cHigh}%</td><td>${s.wind.toFixed(0)} / ${s.gust.toFixed(0)} km/h</td></tr>`).join('')}</tbody>
+                        <thead><tr><th>Phase</th><th>Temp</th><th>Wolken (H/M/L)</th><th>Wind/Böen</th></tr></thead>
+                        <tbody>${ev.samples.map(s => `<tr><td>${s.label}</td><td>${s.temp.toFixed(0)}°</td><td>${s.cHigh}%/${s.cMid}%/${s.cLow}%</td><td>${s.wind.toFixed(0)}/${s.gust.toFixed(0)} km/h</td></tr>`).join('')}</tbody>
                     </table>
                 </div>
                 
@@ -464,7 +490,7 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
                         ${ICONS.ai} ✨ KI Analyse starten
                     </button>
                     <button class="btn-secondary" style="flex:1; font-size:0.7rem;" onclick="copyTourLog('${locName}', ${dayIdx}, '${type}')">
-                        ${ICONS.export} Log kopieren
+                        ${ICONS.export} Log
                     </button>
                 </div>
             </div>
@@ -493,23 +519,16 @@ Du MUSST im JSON-Format antworten. Verwende exakt diese Schlüssel: "sky", "sing
         const day = weekData[dayIdx];
         const ev = type === 'Morgen' ? day.sunrise : day.sunset;
         const main = ev.samples[1];
-        const log = `FOTO-LOG [${name}] - ${day.date.toLocaleDateString()} (${type})
---------------------------------------------------
-LICHT-SCORE: ${ev.score}% | SICHERHEIT: ${100-ev.sub.risk}%
-WETTER: ${main.temp.toFixed(1)}°C | Feuchte: ${main.hum}% | Taup-Abst: ${ev.dewSpread.toFixed(1)}K
-WOLKEN: Ges: ${main.cTot}% | Tief: ${main.cLow}% | Mittel: ${main.cMid}% | Hoch: ${main.cHigh}%
-WIND: ${main.wind.toFixed(1)} km/h | Böen: ${main.gust.toFixed(1)} km/h`;
+        const log = `FOTO-LOG [${name}] - ${day.date.toLocaleDateString()} (${type})\nLICHT-SCORE: ${ev.score}% | SICHERHEIT: ${100-ev.sub.risk}%`;
         const el = document.createElement('textarea'); el.value = log; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
-        const s = document.getElementById('status'); const old = s.innerText; s.innerText = `✓ Log kopiert!`; setTimeout(() => s.innerText = old, 2000);
+        const s = document.getElementById('status'); const old = s.innerText; s.innerText = `✓ Kopiert`; setTimeout(() => s.innerText = old, 2000);
     }
 
     function init() {
         const h = document.getElementById('mainHeroImg');
         if(h) h.onerror = () => { h.src = 'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=1200&q=80'; };
-        
         const storedKey = localStorage.getItem(API_KEY_STORAGE);
         if (storedKey) { document.getElementById('apiKeyInput').value = storedKey; }
-
         renderFavorites();
         const last = JSON.parse(localStorage.getItem(LAST_LOC_KEY));
         if (last) fetchWeather(last.lat, last.lon, last.name);
