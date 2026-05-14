@@ -149,10 +149,10 @@
 <body>
 
 <div class="hero">
-    <img src="https://images.unsplash.com/photo-1470219556762-1771e7f9427d?auto=format&fit=crop&w=1400&q=80" class="hero-img" id="mainHeroImg" alt="Photography Landscape" onerror="this.src='https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80'">
+    <img src="DSC09603.jpg" class="hero-img" id="mainHeroImg" alt="Photography Landscape" onerror="this.src='https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?auto=format&fit=crop&w=1400&q=80'">
     <div class="hero-content">
         <h1>Foto-Wetter Pro</h1>
-        <p>Ausrüstungszentrierte Präzisions-Analyse (v68)</p>
+        <p>Ausrüstungszentrierte Präzisions-Analyse (v69)</p>
     </div>
 </div>
 
@@ -189,12 +189,10 @@
 
 <script>
     /**
-     * REVISIONS-HISTORIE (v68)
+     * REVISIONS-HISTORIE (v69)
      * --------------------------------------------------
-     * v68: Pill-Icons im Header springen nun direkt zum Tab & öffnen das Akkordeon.
-     * KI-Analyse stabilisiert (Payload-Struktur für Preview-Modelle).
-     * Hero-Image korrigiert.
-     * Suchergebnisse werden nach Auswahl zuverlässig gelöscht.
+     * v69: Dynamische Modellauswahl repariert API-Fehler (gemini-2.5-flash).
+     * Hero-Image lädt wieder das lokale Bild DSC09603.jpg.
      * --------------------------------------------------
      */
 
@@ -319,7 +317,8 @@
         }
 
         const main = ev.samples[1];
-        const model = "gemini-2.5-flash-preview-09-2025";
+        const isCanvas = window.location.hostname.includes('usercontent.goog');
+        const model = isCanvas ? "gemini-2.5-flash-preview-09-2025" : "gemini-2.5-flash";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
         
         const systemPrompt = `Du bist ein rationaler Produktions-Assistent für Fotografie (Sony A7 IV). Antworte EXKLUSIV als JSON-Objekt mit den Feldern: "tldr", "motives_gear", "timelapse", "interval_val", "interval_reason". Vermeide Erwähnungen der Insta360.`;
